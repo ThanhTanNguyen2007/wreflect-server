@@ -10,7 +10,9 @@
     "build": "yarn run prisma migrate deploy && yarn run prisma generate && tsc --build tsconfig.json",
     "generate-prisma-migration": "prisma migrate dev --name init",
     "deploy-prisma-migrations": "prisma migrate resolve --applied '20220321052821_init' --preview-feature",
-    "generate-prisma-client": "prisma generate"
+    "generate-prisma-client": "prisma generate",
+    "production": "run-p production:** server",
+    "prod": "pm2 startOrReload prod-ecosystem.json --env production"
   },
   "dependencies": {
     "@prisma/client": "2.26.0",
