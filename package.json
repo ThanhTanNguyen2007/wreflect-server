@@ -2,11 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "author": "",
   "license": "ISC",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "tsc && node dist/app.js",
     "build": "yarn run prisma migrate deploy && yarn run prisma generate && tsc --build tsconfig.json",
     "generate-prisma-migration": "prisma migrate dev --name init",
     "deploy-prisma-migrations": "prisma migrate resolve --applied '20220321052821_init' --preview-feature",
