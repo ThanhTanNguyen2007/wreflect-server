@@ -3,6 +3,8 @@ import { StatusCodes } from 'http-status-codes';
 import { ApolloError } from 'apollo-server-errors';
 dotenv.config();
 import http from 'http';
+import https from 'https';
+import fs from 'fs';
 import cors from 'cors';
 import express from 'express';
 import cookieParser from 'cookie-parser';
@@ -44,6 +46,19 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
   });
   schema = constraintDirective()(schema);
+
+  // let httpServer;
+  // if (config.NODE_ENV === 'PROD') {
+  //   console.log(config.CERT_PATH);
+  //   console.log(config.KEY_PATH);
+  //   const options = {
+  //     key: fs.readFileSync(config.KEY_PATH),
+  //     cert: fs.readFileSync(config.CERT_PATH),
+  //   };
+  //   httpServer = https.createServer(options, app);
+  // } else {
+  //   httpServer = http.createServer(app);
+  // }
 
   const httpServer = http.createServer(app);
   const subscriptionServer = SubscriptionServer.create(
