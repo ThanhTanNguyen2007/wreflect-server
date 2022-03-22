@@ -11,7 +11,6 @@
     "generate-prisma-migration": "prisma migrate dev --name init",
     "deploy-prisma-migrations": "prisma migrate resolve --applied '20220321052821_init' --preview-feature",
     "generate-prisma-client": "prisma generate",
-    "production": "run-p production:** server",
     "prod": "pm2 startOrReload prod-ecosystem.json --env production"
   },
   "dependencies": {

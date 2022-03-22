@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "server",
-      "script": "npm run production",
+      "script": "yarn start",
       "args": "one two",
       "instances": 1,
       "autorestart": true,
