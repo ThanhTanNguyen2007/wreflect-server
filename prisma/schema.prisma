@@ -1,0 +1,301 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialActions"]
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_DATABASE_URL")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String
+  expiresAt DateTime
+  data      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, token])
+  @@index([expiresAt])
+}
+
+model Assessment {
+  id                       String                 @id @default(uuid())
+  name                     String
+  startDate                DateTime
+  endDate                  DateTime
+  teamId                   String
+  team                     Team                   @relation(fields: [teamId], references: [id])
+  ownerId                  String
+  ownerMember              Member                 @relation(fields: [ownerId], references: [id])
+  status                   AssessmentStatus
+  assessmentOnCriteriaList AssessmentOnCriteria[]
+}
+
+model AssessmentOnCriteria {
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  criteriaId   String
+  criteria     Criteria   @relation(fields: [criteriaId], references: [id])
+  createdAt    DateTime   @default(now())
+  createdBy    String
+
+  @@id([assessmentId, criteriaId])
+}
+
+model Criteria {
+  id                       String                 @id @default(uuid())
+  name                     String                 @unique
+  description              String
+  assessmentOnCriteriaList AssessmentOnCriteria[]
+}
+
+enum AssessmentStatus {
+  PLANNED
+  DOING
+  COMPLETE
+  REOPENED
+}
+
+model Team {
+  id          String        @id @default(uuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  startDate   DateTime
+  endDate     DateTime
+  picture     String
+  isPublic    Boolean       @default(true)
+  description String?
+  status      TeamStatus    @default(DOING)
+  members     Member[]
+  boards      Board[]
+  healthCheck HealthCheck[]
+  assessment  Assessment[]
+}
+
+model Board {
+  id              String       @id @default(uuid())
+  teamId          String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String
+  isPublic        Boolean      @default(true)
+  isLocked        Boolean      @default(false)
+  disableDownVote Boolean      @default(false)
+  disableUpVote   Boolean      @default(false)
+  isAnonymous     Boolean      @default(false)
+  votesLimit      Int          @default(25)
+  currentColumnId String?
+  title           String
+  timerInProgress Boolean      @default(false)
+  type            BoardType    @default(PHASE)
+  currentPhase    PhaseType    @default(REFLECT)
+  endTime         DateTime?
+  team            Team         @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  columns         Column[]
+  healthCheck     HealthCheck?
+}
+
+model HealthCheck {
+  id             String            @id @default(uuid())
+  teamId         String
+  boardId        String            @unique
+  templateId     String
+  createdAt      DateTime          @default(now())
+  createdBy      String
+  updatedAt      DateTime          @updatedAt
+  updatedBy      String?
+  isAnonymous    Boolean
+  isCustom       Boolean
+  status         StatusHealthCheck
+  board          Board             @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team           Team              @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  memberAnswers  MemberAnswer[]
+  memberComments MemberComment[]
+
+  @@unique([teamId, boardId])
+}
+
+model MemberAnswer {
+  id            String      @id @default(uuid())
+  templateId    String
+  healthCheckId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  memberId      String
+  answers       Answer[]
+  healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([healthCheckId, memberId])
+}
+
+model Answer {
+  id              String        @id @default(uuid())
+  questionId      String
+  value           String
+  memberAnswersId String?
+  memberAnswer    MemberAnswer? @relation(fields: [memberAnswersId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model MemberComment {
+  id            String      @id @default(uuid())
+  templateId    String
+  healthCheckId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  memberId      String
+  questionId    String
+  text          String
+  member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([healthCheckId, questionId, memberId])
+}
+
+enum BoardType {
+  DEFAULT
+  PHASE
+}
+
+enum PhaseType {
+  REFLECT
+  GROUP
+  VOTES
+  DISCUSS
+}
+
+model Column {
+  id       String    @id @default(uuid())
+  color    String    @default("white")
+  title    String
+  isActive Boolean   @default(true)
+  position Int
+  opinions Opinion[]
+  boardId  String
+  board    Board     @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Opinion {
+  id            String        @id @default(uuid())
+  columnId      String?
+  authorId      String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  text          String
+  upVote        String[]
+  downVote      String[]
+  updatedBy     String
+  isAction      Boolean       @default(false)
+  isBookmarked  Boolean       @default(false)
+  responsible   String        @default("not-assigned")
+  mergedAuthors String[]
+  color         String        @default("pink")
+  position      Int
+  status        OpinionStatus @default(NEW)
+  author        Member        @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  column        Column?       @relation(fields: [columnId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  remarks       Remark[]
+}
+
+model Remark {
+  id        String   @id @default(uuid())
+  authorId  String
+  opinionId String
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  opinion   Opinion  @relation(fields: [opinionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  author    Member   @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+enum StatusHealthCheck {
+  OPEN
+  CLOSED
+}
+
+enum OpinionStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+  REJECTED
+}
+
+enum TeamStatus {
+  DOING
+  DONE
+}
+
+model Member {
+  id                  String          @id @default(uuid())
+  userId              String
+  teamId              String
+  isOwner             Boolean         @default(false)
+  isSuperOwner        Boolean         @default(false)
+  isPendingInvitation Boolean         @default(false)
+  isGuess             Boolean         @default(false)
+  meetingNote         String?
+  invitedBy           String?
+  joinedAt            DateTime        @default(now())
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team                Team            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  opinions            Opinion[]
+  remarks             Remark[]
+  assessments         Assessment[]
+  memberComments      MemberComment[]
+  memberAnswers       MemberAnswer[]
+
+  @@unique([userId, teamId])
+}
+
+model Notification {
+  id           String  @id @default(uuid())
+  userId       String
+  title        String
+  description  String
+  linkRedirect String?
+  isSeen       Boolean
+  user         User    @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  isAdmin      Boolean    @default(false)
+  userStatus   UserStatus @default(OFFLINE)
+  nickname     String     @db.VarChar(150)
+  picture      String     @db.VarChar(500)
+  gender       Gender     @default(UNSPECIFIED)
+  workplace    String?    @db.VarChar(300)
+  address      String?    @db.VarChar(300)
+  school       String?    @db.VarChar(300)
+  introduction String?    @db.VarChar(500)
+  talents      String?    @db.VarChar(500)
+  interests    String?    @db.VarChar(500)
+
+  session Session[]
+  members Member[]
+
+  notification Notification[]
+  @@index([email])
+}
+
+enum Gender {
+  UNSPECIFIED
+  MALE
+  FEMALE
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+}

@@ -1,0 +1,341 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Session {
+  id String [pk]
+  userId String [not null]
+  token String [not null]
+  expiresAt DateTime [not null]
+  data String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user User [not null]
+
+  indexes {
+    (userId, token) [unique]
+  }
+}
+
+Table Assessment {
+  id String [pk]
+  name String [not null]
+  startDate DateTime [not null]
+  endDate DateTime [not null]
+  teamId String [not null]
+  team Team [not null]
+  ownerId String [not null]
+  ownerMember Member [not null]
+  status AssessmentStatus [not null]
+  assessmentOnCriteriaList AssessmentOnCriteria [not null]
+}
+
+Table AssessmentOnCriteria {
+  assessmentId String [not null]
+  assessment Assessment [not null]
+  criteriaId String [not null]
+  criteria Criteria [not null]
+  createdAt DateTime [default: `now()`, not null]
+  createdBy String [not null]
+
+  indexes {
+    (assessmentId, criteriaId) [pk]
+  }
+}
+
+Table Criteria {
+  id String [pk]
+  name String [unique, not null]
+  description String [not null]
+  assessmentOnCriteriaList AssessmentOnCriteria [not null]
+}
+
+Table Team {
+  id String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  startDate DateTime [not null]
+  endDate DateTime [not null]
+  picture String [not null]
+  isPublic Boolean [not null, default: true]
+  description String
+  status TeamStatus [not null, default: 'DOING']
+  members Member [not null]
+  boards Board [not null]
+  healthCheck HealthCheck [not null]
+  assessment Assessment [not null]
+}
+
+Table Board {
+  id String [pk]
+  teamId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  createdBy String [not null]
+  isPublic Boolean [not null, default: true]
+  isLocked Boolean [not null, default: false]
+  disableDownVote Boolean [not null, default: false]
+  disableUpVote Boolean [not null, default: false]
+  isAnonymous Boolean [not null, default: false]
+  votesLimit Int [not null, default: 25]
+  currentColumnId String
+  title String [not null]
+  timerInProgress Boolean [not null, default: false]
+  type BoardType [not null, default: 'PHASE']
+  currentPhase PhaseType [not null, default: 'REFLECT']
+  endTime DateTime
+  team Team [not null]
+  columns Column [not null]
+  healthCheck HealthCheck
+}
+
+Table HealthCheck {
+  id String [pk]
+  teamId String [not null]
+  boardId String [unique, not null]
+  templateId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  createdBy String [not null]
+  updatedAt DateTime [not null]
+  updatedBy String
+  isAnonymous Boolean [not null]
+  isCustom Boolean [not null]
+  status StatusHealthCheck [not null]
+  board Board [not null]
+  team Team [not null]
+  memberAnswers MemberAnswer [not null]
+  memberComments MemberComment [not null]
+
+  indexes {
+    (teamId, boardId) [unique]
+  }
+}
+
+Table MemberAnswer {
+  id String [pk]
+  templateId String [not null]
+  healthCheckId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  memberId String [not null]
+  answers Answer [not null]
+  healthCheck HealthCheck [not null]
+  member Member [not null]
+
+  indexes {
+    (healthCheckId, memberId) [unique]
+  }
+}
+
+Table Answer {
+  id String [pk]
+  questionId String [not null]
+  value String [not null]
+  memberAnswersId String
+  memberAnswer MemberAnswer
+}
+
+Table MemberComment {
+  id String [pk]
+  templateId String [not null]
+  healthCheckId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  memberId String [not null]
+  questionId String [not null]
+  text String [not null]
+  member Member [not null]
+  healthCheck HealthCheck [not null]
+
+  indexes {
+    (healthCheckId, questionId, memberId) [unique]
+  }
+}
+
+Table Column {
+  id String [pk]
+  color String [not null, default: 'white']
+  title String [not null]
+  isActive Boolean [not null, default: true]
+  position Int [not null]
+  opinions Opinion [not null]
+  boardId String [not null]
+  board Board [not null]
+}
+
+Table Opinion {
+  id String [pk]
+  columnId String
+  authorId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  text String [not null]
+  upVote String [not null]
+  downVote String [not null]
+  updatedBy String [not null]
+  isAction Boolean [not null, default: false]
+  isBookmarked Boolean [not null, default: false]
+  responsible String [not null, default: 'not-assigned']
+  mergedAuthors String [not null]
+  color String [not null, default: 'pink']
+  position Int [not null]
+  status OpinionStatus [not null, default: 'NEW']
+  author Member [not null]
+  column Column
+  remarks Remark [not null]
+}
+
+Table Remark {
+  id String [pk]
+  authorId String [not null]
+  opinionId String [not null]
+  text String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  opinion Opinion [not null]
+  author Member [not null]
+}
+
+Table Member {
+  id String [pk]
+  userId String [not null]
+  teamId String [not null]
+  isOwner Boolean [not null, default: false]
+  isSuperOwner Boolean [not null, default: false]
+  isPendingInvitation Boolean [not null, default: false]
+  isGuess Boolean [not null, default: false]
+  meetingNote String
+  invitedBy String
+  joinedAt DateTime [default: `now()`, not null]
+  user User [not null]
+  team Team [not null]
+  opinions Opinion [not null]
+  remarks Remark [not null]
+  assessments Assessment [not null]
+  memberComments MemberComment [not null]
+  memberAnswers MemberAnswer [not null]
+
+  indexes {
+    (userId, teamId) [unique]
+  }
+}
+
+Table Notification {
+  id String [pk]
+  userId String [not null]
+  title String [not null]
+  description String [not null]
+  linkRedirect String
+  isSeen Boolean [not null]
+  user User [not null]
+}
+
+Table User {
+  id String [pk]
+  email String [unique, not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  isAdmin Boolean [not null, default: false]
+  userStatus UserStatus [not null, default: 'OFFLINE']
+  nickname String [not null]
+  picture String [not null]
+  gender Gender [not null, default: 'UNSPECIFIED']
+  workplace String
+  address String
+  school String
+  introduction String
+  talents String
+  interests String
+  session Session [not null]
+  members Member [not null]
+  notification Notification [not null]
+}
+
+Enum AssessmentStatus {
+  PLANNED
+  DOING
+  COMPLETE
+  REOPENED
+}
+
+Enum BoardType {
+  DEFAULT
+  PHASE
+}
+
+Enum PhaseType {
+  REFLECT
+  GROUP
+  VOTES
+  DISCUSS
+}
+
+Enum StatusHealthCheck {
+  OPEN
+  CLOSED
+}
+
+Enum OpinionStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+  REJECTED
+}
+
+Enum TeamStatus {
+  DOING
+  DONE
+}
+
+Enum Gender {
+  UNSPECIFIED
+  MALE
+  FEMALE
+}
+
+Enum UserStatus {
+  ONLINE
+  OFFLINE
+}
+
+Ref: Session.userId > User.id
+
+Ref: Assessment.teamId > Team.id
+
+Ref: Assessment.ownerId > Member.id
+
+Ref: AssessmentOnCriteria.assessmentId > Assessment.id
+
+Ref: AssessmentOnCriteria.criteriaId > Criteria.id
+
+Ref: Board.teamId > Team.id
+
+Ref: HealthCheck.boardId - Board.id
+
+Ref: HealthCheck.teamId > Team.id
+
+Ref: MemberAnswer.healthCheckId > HealthCheck.id
+
+Ref: MemberAnswer.memberId > Member.id
+
+Ref: Answer.memberAnswersId > MemberAnswer.id
+
+Ref: MemberComment.memberId > Member.id
+
+Ref: MemberComment.healthCheckId > HealthCheck.id
+
+Ref: Column.boardId > Board.id
+
+Ref: Opinion.authorId > Member.id
+
+Ref: Opinion.columnId > Column.id
+
+Ref: Remark.opinionId > Opinion.id
+
+Ref: Remark.authorId > Member.id
+
+Ref: Member.userId > User.id
+
+Ref: Member.teamId > Team.id
+
+Ref: Notification.userId > User.id
