@@ -1,3 +1,4 @@
+import { Opinion } from '@prisma/client';
 import { gql } from 'apollo-server-express';
 const typeDefs = gql`
   type AddMembersMutationResponse {
@@ -184,6 +185,15 @@ const typeDefs = gql`
     ): Opinion
 
     removeOpinion(teamId: String!, boardId: String!, columnId: String!, opinionId: String!): Column
+
+    convertOpinion(
+      teamId: String!
+      boardId: String!
+      columnId: String!
+      opinionId: String!
+      isAction: Boolean!
+    ): Opinion
+
     orderOpinion(
       teamId: String!
       boardId: String!
@@ -213,6 +223,17 @@ const typeDefs = gql`
     addMembers(emailUsers: [String!], teamId: String!): AddMembersMutationResponse
     removeMember(memberId: String!, teamId: String!): Team
     changeRoleMember(memberId: String!, teamId: String!, isOwner: Boolean!): Team
+
+    updateActionTracker(
+      teamId: String!
+      sourceBoardId: String!
+      sourceColumnId: String!
+      destinationBoardId: String!
+      destinationColumnId: String!
+      opinionId: String!
+      status: OpinionStatus!
+      responsible: String!
+    ): Team
   }
 `;
 

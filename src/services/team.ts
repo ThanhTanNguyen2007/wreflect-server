@@ -5,8 +5,9 @@ import { createTeamType, RequestWithUserInfo, updateTeamType } from '../types';
 import { Team, TeamStatus, Member } from '@prisma/client';
 import { errorName } from '../constant/errorsConstant';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
-import { checkIsMemberOwningTeam } from './essential';
+import { checkIsMemberOfTeam, checkIsMemberOwningTeam, allowUpdatingOpinion } from './essential';
 import error from '../errorsManagement';
+import { updateActionTrackerType } from '../apollo/typeDefss/opinionTypeDefs';
 
 export const getTeams = async (
   isGettingAll = false,
@@ -274,6 +275,78 @@ export const deleteTeam = async (req: RequestWithUserInfo, teamId: string) => {
 
   if (!batchPayload) throw new ForbiddenError(`You are not the owner of Team ${teamId}`);
   return batchPayload;
+};
+
+export const updateActionTracker = async (meId: string, args: updateActionTrackerType) => {
+  const memberOfTeam = await checkIsMemberOfTeam(args?.teamId, meId);
+
+  await allowUpdatingOpinion(memberOfTeam, args.opinionId);
+
+  const team = await prisma.team.update({
+    where: {
+      id: args.teamId,
+    },
+    data: {
+      boards: {
+        update: [
+          {
+            where: {
+              id: args.sourceBoardId,
+            },
+            data: {
+              columns: {
+                update: {
+                  where: {
+                    id: args.sourceColumnId,
+                  },
+                  data: {
+                    opinions: {
+                      disconnect: {
+                        id: args.opinionId,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          {
+            where: {
+              id: args.destinationBoardId,
+            },
+            data: {
+              columns: {
+                update: {
+                  where: {
+                    id: args.destinationColumnId,
+                  },
+                  data: {
+                    opinions: {
+                      connect: {
+                        id: args.opinionId,
+                      },
+                      update: {
+                        where: {
+                          id: args.opinionId,
+                        },
+                        data: {
+                          responsible: args.responsible,
+                          status: args.status,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  if (!team) return error?.NotFound();
+  return team;
 };
 
 // export const createBoard = async (req: RequestWithUserInfo, teamId: string) => {

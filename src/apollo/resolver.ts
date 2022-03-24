@@ -10,6 +10,8 @@ import {
   orderOpinionType,
   combineOpinionType,
   updateOpinionType,
+  convertToActionType,
+  updateActionTrackerType,
 } from './typeDefss/opinionTypeDefs';
 import { pubsub } from '../pubSub';
 import { updateBoardType, createBoardType, deleteBoardType } from './typeDefss/boardTypeDefs';
@@ -203,7 +205,7 @@ const resolvers = {
     },
 
     createOpinion: async (_, args: createOpinionType, { req }: { req: RequestWithUserInfo }) => {
-      const { id: meId } = req.user;
+      const { id: meId } = req?.user;
 
       const columnContaintCreatingOpinion = await opinion.createOpinion(meId, args);
 
@@ -212,6 +214,16 @@ const resolvers = {
         teamId: args.teamId,
       });
       return columnContaintCreatingOpinion;
+    },
+
+    convertOpinion: async (_, args: convertToActionType, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const action = await opinion.convertToAction(meId, args);
+      pubsub.publish('CONVERT_TO_ACTION', {
+        updateOpinion: action,
+        teamId: args.teamId,
+      });
+      return action;
     },
 
     updateOpinion: async (_, args: updateOpinionType, { req }: { req: RequestWithUserInfo }) => {
@@ -260,13 +272,23 @@ const resolvers = {
       return opinionWithCreatingRemark;
     },
     removeRemark: async (_, args: removeRemarkType, { req }: { req: RequestWithUserInfo }) => {
-      const { id: meId } = req.user;
+      const { id: meId } = req?.user || {};
       const opinionWithRemovingRemark = await remark.removeRemark(meId, args);
       pubsub.publish('REMOVE_REMARK', {
         updateOpinion: { ...opinionWithRemovingRemark },
         teamId: args.teamId,
       });
       return opinionWithRemovingRemark;
+    },
+
+    updateActionTracker: async (_, args: updateActionTrackerType, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const teamUpdated = await team.updateActionTracker(meId, args);
+      pubsub.publish('UPDATE_ACTION_TRACKER', {
+        subOnUpdateTeam: teamUpdated,
+        teamId: args.teamId,
+      });
+      return teamUpdated;
     },
   },
   Subscription: {
@@ -289,7 +311,14 @@ const resolvers = {
     },
     subOnUpdateTeam: {
       subscribe: withFilter(
-        () => pubsub.asyncIterator(['UPDATE_TEAM', 'CHANGE_MEMBER_ROLE', 'CREATE_BOARD', 'DELETE_BOARD']),
+        () =>
+          pubsub.asyncIterator([
+            'UPDATE_ACTION_TRACKER',
+            'UPDATE_TEAM',
+            'CHANGE_MEMBER_ROLE',
+            'CREATE_BOARD',
+            'DELETE_BOARD',
+          ]),
         (_, args) => {
           return _?.teamId === args?.teamId;
         },
@@ -332,7 +361,7 @@ const resolvers = {
 
     updateOpinion: {
       subscribe: withFilter(
-        () => pubsub.asyncIterator(['UPDATE_OPINION', 'CREATE_REMARK', 'REMOVE_REMARK']),
+        () => pubsub.asyncIterator(['UPDATE_OPINION', 'CONVERT_TO_ACTION', 'CREATE_REMARK', 'REMOVE_REMARK']),
         (_, args) => {
           return _?.teamId === args?.teamId;
         },

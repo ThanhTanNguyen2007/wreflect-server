@@ -4,6 +4,7 @@ import { ApolloError } from 'apollo-server-errors';
 import prisma from '../prisma';
 import {
   combineOpinionType,
+  convertToActionType,
   createOpinionType,
   orderOpinionType,
   removeOpinionType,
@@ -108,6 +109,26 @@ export const createOpinion = async (meId: string, args: createOpinionType) => {
 
   if (!column) return error.Forbidden();
   return column;
+};
+
+export const convertToAction = async (meId: string, args: convertToActionType) => {
+  const memberOfTeam = await checkIsMemberOfTeam(args.teamId, meId);
+  await allowUpdatingOpinion(memberOfTeam, args.opinionId);
+
+  const action = await prisma.opinion.update({
+    where: {
+      id: args.opinionId,
+    },
+    data: {
+      status: 'NEW',
+      responsible: 'not-assigned',
+      isAction: args.isAction,
+    },
+  });
+
+  if (!action) return error.NotFound();
+
+  return action;
 };
 
 export const updateOpinion = async (teamId: string, userId: string, args: updateOpinionType) => {

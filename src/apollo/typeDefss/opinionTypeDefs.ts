@@ -41,6 +41,14 @@ export type createOpinionType = {
   isCreateBottom: boolean;
 };
 
+export type convertToActionType = {
+  teamId: string;
+  boardId: string;
+  columnId: string;
+  opinionId: string;
+  isAction: boolean;
+};
+
 export type updateOpinionType = {
   teamId: string;
   opinionId: string;
@@ -89,6 +97,17 @@ export type combineOpinionType = {
   };
   draggableId: string;
   text: string;
+};
+
+export type updateActionTrackerType = {
+  teamId: string;
+  sourceBoardId: string;
+  sourceColumnId: string;
+  destinationBoardId: string;
+  destinationColumnId: string;
+  opinionId: string;
+  status: OpinionStatus;
+  responsible: string;
 };
 
 export default typeDefs;
