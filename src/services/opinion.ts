@@ -1,4 +1,4 @@
-import { checkIsMemberOfTeam, allowUpdatingBoard } from './essential';
+import { checkIsMemberOfTeam, allowUpdatingBoard, allowUpdatingOpinion } from './essential';
 import { StatusCodes } from 'http-status-codes';
 import { ApolloError } from 'apollo-server-errors';
 import prisma from '../prisma';
@@ -36,8 +36,8 @@ export const getOpinion = async (opinionId: string) => {
 };
 
 export const createOpinion = async (meId: string, args: createOpinionType) => {
-  const member = await checkIsMemberOfTeam(args.teamId, meId);
-  await allowUpdatingBoard(member, args.boardId);
+  const memberOfTeam = await checkIsMemberOfTeam(args.teamId, meId);
+  await allowUpdatingBoard(memberOfTeam, args.boardId);
 
   const max = await prisma.opinion.aggregate({
     where: {
@@ -65,7 +65,7 @@ export const createOpinion = async (meId: string, args: createOpinionType) => {
         },
       };
 
-  const myBoard = await prisma.column.update({
+  const column = await prisma.column.update({
     where: {
       id: args.columnId,
     },
@@ -75,42 +75,39 @@ export const createOpinion = async (meId: string, args: createOpinionType) => {
         create: {
           text: args.text,
           isAction: args.isAction,
-          authorId: member.id,
-          updatedBy: member.id,
+          authorId: memberOfTeam.id,
+          updatedBy: memberOfTeam.id,
           position:
             (max?._max?.position || max?._max?.position == 0) && args.isCreateBottom ? max._max.position + 1 : 0,
         },
       },
     },
-
-    select: {
-      board: {
+    include: {
+      opinions: {
         include: {
-          columns: {
+          remarks: {
             include: {
-              opinions: {
-                orderBy: {
-                  position: 'asc',
-                },
+              author: {
+                include: { user: true },
               },
             },
-          },
-          team: {
-            include: {
-              members: {
-                include: {
-                  user: true,
-                },
-              },
+            orderBy: {
+              createdAt: 'asc',
             },
           },
+          author: {
+            include: { user: true },
+          },
+        },
+        orderBy: {
+          position: 'asc',
         },
       },
     },
   });
 
-  if (!myBoard) throw new ApolloError('Data not found', `${StatusCodes.NOT_FOUND}`);
-  return myBoard;
+  if (!column) return error.Forbidden();
+  return column;
 };
 
 export const updateOpinion = async (teamId: string, userId: string, args: updateOpinionType) => {
@@ -136,8 +133,121 @@ export const updateOpinion = async (teamId: string, userId: string, args: update
   return opinion;
 };
 
-export const removeOpinion = async (req: RequestWithUserInfo, args: removeOpinionType) => {
-  const { id: meId } = req.user;
+export const removeOpinion = async (userId: string, args: removeOpinionType) => {
+  const memberOfTeam = await checkIsMemberOfTeam(args.teamId, userId);
+  await allowUpdatingOpinion(memberOfTeam, args.opinionId);
+
+  const column = await prisma.column.update({
+    where: {
+      id: args.columnId,
+    },
+    data: {
+      opinions: {
+        delete: {
+          id: args.opinionId,
+        },
+      },
+    },
+  });
+
+  if (!column) return error.NotFound();
+  return column;
+};
+
+export const orderOpinion = async (req: RequestWithUserInfo, args: orderOpinionType) => {
+  const column =
+    args.destination.droppableId === args.source.droppableId
+      ? args.source.index == args.destination.index
+        ? undefined
+        : {
+            update: {
+              where: {
+                id: args.destination.droppableId,
+              },
+              data: {
+                opinions: {
+                  updateMany: [
+                    {
+                      where: {
+                        position: args.destination.index,
+                      },
+                      data: {
+                        position: args.source.index,
+                      },
+                    },
+                    {
+                      where: {
+                        id: args.draggableId,
+                      },
+                      data: { position: args.destination.index },
+                    },
+                  ],
+                },
+              },
+            },
+          }
+      : {
+          update: [
+            {
+              where: {
+                id: args.destination.droppableId,
+              },
+              data: {
+                opinions: {
+                  connect: {
+                    id: args.draggableId,
+                  },
+                  updateMany: [
+                    {
+                      where: {
+                        position: {
+                          gte: args.destination.index,
+                        },
+                      },
+                      data: {
+                        position: {
+                          increment: 1,
+                        },
+                      },
+                    },
+                    {
+                      where: {
+                        id: args.draggableId,
+                      },
+                      data: {
+                        position: args.destination.index,
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              where: {
+                id: args.source.droppableId,
+              },
+              data: {
+                opinions: {
+                  disconnect: {
+                    id: args.draggableId,
+                  },
+                  updateMany: {
+                    where: {
+                      position: {
+                        gt: args.source.index,
+                      },
+                    },
+                    data: {
+                      position: {
+                        decrement: 1,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        };
 
   const board = await prisma.board.update({
     where: {
@@ -145,196 +255,12 @@ export const removeOpinion = async (req: RequestWithUserInfo, args: removeOpinio
     },
     data: {
       columns: {
-        update: {
-          where: {
-            id: args.columnId,
-          },
-          data: {
-            opinions: {
-              delete: {
-                id: args.opinionId,
-              },
-            },
-          },
-        },
-      },
-    },
-    include: {
-      columns: {
-        include: {
-          opinions: {
-            include: {
-              remarks: true,
-            },
-          },
-        },
-      },
-      team: {
-        include: {
-          members: {
-            include: {
-              user: true,
-            },
-          },
-        },
+        ...column,
       },
     },
   });
-  const column = await prisma.column.findFirst({
-    where: {
-      OR: [
-        {
-          board: {
-            team: {
-              members: {
-                some: {
-                  userId: meId,
-                  isOwner: true,
-                },
-              },
-            },
-          },
-          opinions: {
-            some: {
-              id: args.opinionId,
-            },
-          },
-        },
-        {
-          opinions: {
-            some: {
-              id: args.opinionId,
-              authorId: meId,
-            },
-          },
-        },
-      ],
-    },
-  });
 
-  if (!board) throw new ApolloError('You dont have permission or data not found', `${StatusCodes.FORBIDDEN}`);
-  return board;
-};
-
-export const orderOpinion = async (req: RequestWithUserInfo, args: orderOpinionType) => {
-  args.destination.droppableId === args.source.droppableId
-    ? args.source.index == args.destination.index
-      ? undefined
-      : await prisma.column.update({
-          where: {
-            id: args.destination.droppableId,
-          },
-          data: {
-            opinions: {
-              updateMany: [
-                {
-                  where: {
-                    position: args.destination.index,
-                  },
-                  data: {
-                    position: args.source.index,
-                  },
-                },
-                {
-                  where: {
-                    id: args.draggableId,
-                  },
-                  data: { position: args.destination.index },
-                },
-              ],
-            },
-          },
-        })
-    : await prisma.$transaction([
-        prisma.column.update({
-          where: {
-            id: args.source.droppableId,
-          },
-          data: {
-            opinions: {
-              disconnect: {
-                id: args.draggableId,
-              },
-              updateMany: {
-                where: {
-                  position: {
-                    gt: args.source.index,
-                  },
-                },
-                data: {
-                  position: {
-                    decrement: 1,
-                  },
-                },
-              },
-            },
-          },
-        }),
-        prisma.column.update({
-          where: {
-            id: args.destination.droppableId,
-          },
-          data: {
-            opinions: {
-              connect: {
-                id: args.draggableId,
-              },
-              updateMany: [
-                {
-                  where: {
-                    position: {
-                      gte: args.destination.index,
-                    },
-                  },
-                  data: {
-                    position: {
-                      increment: 1,
-                    },
-                  },
-                },
-                {
-                  where: {
-                    id: args.draggableId,
-                  },
-                  data: {
-                    position: args.destination.index,
-                  },
-                },
-              ],
-            },
-          },
-        }),
-      ]);
-
-  const board = await prisma.board.findFirst({
-    where: {
-      columns: {
-        some: {
-          id: args.source.droppableId,
-        },
-      },
-    },
-    include: {
-      columns: {
-        include: {
-          opinions: {
-            include: {
-              remarks: true,
-            },
-          },
-        },
-      },
-      team: {
-        include: {
-          members: {
-            include: {
-              user: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  if (!board) return error.NotFound();
   return board;
 };
 

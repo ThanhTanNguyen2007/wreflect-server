@@ -63,6 +63,8 @@ export type removeOpinionType = {
 };
 
 export type orderOpinionType = {
+  teamId: string;
+  boardId: string;
   destination: {
     droppableId: string;
     index: number;
@@ -75,6 +77,8 @@ export type orderOpinionType = {
 };
 
 export type combineOpinionType = {
+  teamId: string;
+  boardId: string;
   combine: {
     draggableId: string;
     droppableId: string;

@@ -66,58 +66,66 @@ export const getBoard = async (boardId: string, meId: string) => {
   return board;
 };
 
-export const createBoard = async (req: RequestWithUserInfo, args: createBoardType) => {
-  const { id: meId, email } = req?.user;
+export const createBoard = async (meId: string, args: createBoardType) => {
+  const memberOwnedTeam = await checkIsMemberOwningTeam(args.teamId, meId);
 
-  const board = await prisma.board.create({
+  const team = await prisma.team.update({
+    where: {
+      id: args.teamId,
+    },
     data: {
-      teamId: args.teamId,
-      isPublic: args.isPublic,
-      isLocked: args.isLocked,
-      disableDownVote: args.disableDownVote,
-      disableUpVote: args.disableUpVote,
-      isAnonymous: args.isAnonymous,
-      votesLimit: args.votesLimit,
-      title: args.title,
-      createdBy: email,
-      type: args.type,
-      currentPhase: args.currentPhase,
-      endTime: args.endTime,
-      columns: {
-        createMany: {
-          data: [
-            {
-              title: args.column1 || '',
-              isActive: args.isActiveCol1,
-              position: 1,
+      boards: {
+        create: {
+          isPublic: args.isPublic,
+          isLocked: args.isLocked,
+          disableDownVote: args.disableDownVote,
+          disableUpVote: args.disableUpVote,
+          isAnonymous: args.isAnonymous,
+          votesLimit: args.votesLimit,
+          title: args.title,
+          createdBy: memberOwnedTeam?.user?.email,
+          type: args.type,
+          currentPhase: args.currentPhase,
+          endTime: args.endTime,
+          columns: {
+            createMany: {
+              data: [
+                {
+                  title: args.column1 || '',
+                  isActive: args.isActiveCol1,
+                  position: 1,
+                },
+                {
+                  title: args.column2 || '',
+                  isActive: args.isActiveCol2,
+                  position: 2,
+                },
+                {
+                  title: args.column3 || '',
+                  isActive: args.isActiveCol3,
+                  position: 3,
+                },
+                {
+                  title: args.column4 || '',
+                  isActive: args.isActiveCol4,
+                  position: 4,
+                },
+                {
+                  title: args.column5 || '',
+                  isActive: args.isActiveCol5,
+                  position: 5,
+                },
+              ],
             },
-            {
-              title: args.column2 || '',
-              isActive: args.isActiveCol2,
-              position: 2,
-            },
-            {
-              title: args.column3 || '',
-              isActive: args.isActiveCol3,
-              position: 3,
-            },
-            {
-              title: args.column4 || '',
-              isActive: args.isActiveCol4,
-              position: 4,
-            },
-            {
-              title: args.column5 || '',
-              isActive: args.isActiveCol5,
-              position: 5,
-            },
-          ],
+          },
         },
       },
     },
   });
 
-  return board;
+  if (!team) return error.NotFound();
+
+  return team;
 };
 
 export const updateBoard = async (meId: string, args: updateBoardType) => {
@@ -223,11 +231,21 @@ export const deleteBoard = async (meId: string, args: deleteBoardType) => {
   if (memberOwnedTeam?.team?.boards?.length <= 1) {
     return error.METHOD_NOT_ALLOWED('Only have 1 board in this team, method delete not allowed');
   }
-  const deletingBoard = await prisma.board.delete({
+
+  const team = await prisma.team.update({
     where: {
-      id: args.boardId,
+      id: args.teamId,
+    },
+    data: {
+      boards: {
+        delete: {
+          id: args.boardId,
+        },
+      },
     },
   });
 
-  return deletingBoard;
+  if (!team) return error.NotFound();
+
+  return team;
 };

@@ -128,7 +128,7 @@ const typeDefs = gql`
       isActiveCol3: Boolean
       isActiveCol4: Boolean
       isActiveCol5: Boolean
-    ): Board
+    ): Team
 
     updateBoard(
       teamId: String!
@@ -156,7 +156,7 @@ const typeDefs = gql`
       isActiveCol5: Boolean
     ): Board
 
-    deleteBoard(teamId: String!, boardId: String!): Board
+    deleteBoard(teamId: String!, boardId: String!): Team
 
     convertOpinionsInColumn(teamId: String!, boardId: String!, columnId: String!, action: ActionConvertColumn!): Column
     emptyColumn(teamId: String!, boardId: String!, columnId: String): Column
@@ -168,7 +168,7 @@ const typeDefs = gql`
       text: String
       isAction: Boolean
       isCreateBottom: Boolean
-    ): Board
+    ): Column
     updateOpinion(
       teamId: String!
       opinionId: String!
@@ -183,9 +183,22 @@ const typeDefs = gql`
       newColumnId: String
     ): Opinion
 
-    removeOpinion(teamId: String!, boardId: String!, columnId: String!, opinionId: String!): Board
-    orderOpinion(destination: orderOpinion, source: orderOpinion, draggableId: String): Board
-    combineOpinion(combine: combineOpinion, source: orderOpinion, draggableId: String, text: String): Board
+    removeOpinion(teamId: String!, boardId: String!, columnId: String!, opinionId: String!): Column
+    orderOpinion(
+      teamId: String!
+      boardId: String!
+      destination: orderOpinion
+      source: orderOpinion
+      draggableId: String
+    ): Board
+    combineOpinion(
+      teamId: String!
+      boardId: String!
+      combine: combineOpinion
+      source: orderOpinion
+      draggableId: String
+      text: String
+    ): Board
 
     createRemark(
       teamId: String!

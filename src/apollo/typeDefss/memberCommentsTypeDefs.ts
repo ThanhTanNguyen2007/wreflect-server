@@ -7,10 +7,10 @@ const typeDefs = gql`
     healthCheckId: String
     createdAt: String
     updatedAt: String
-    userId: String
+    memberId: String
     questionId: String
     text: String
-    user: User
+    member: Member
     healthCheck: HealthCheck
   }
 `;

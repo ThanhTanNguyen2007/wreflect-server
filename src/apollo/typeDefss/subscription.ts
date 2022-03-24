@@ -7,16 +7,15 @@ const typeDefs = gql`
 
   type Subscription {
     subOnUpdateTeams(meId: ID!): statusRequest
-    subOnUpdateTeam(meId: ID!): Team
+    subOnUpdateTeam(meId: ID!, teamId: ID!): Team
 
-    updateBoard(meId: ID!, boardId: ID!): Board
-    deleteBoard(meId: ID!): Board
+    updateBoard(meId: ID!, teamId: ID!): Board
 
-    subOnUpdateColumn(meId: ID!): Column
+    subOnUpdateColumn(meId: ID!, teamId: ID!): Column
 
-    updateOpinion(meId: ID!): Opinion
+    updateOpinion(meId: ID!, teamId: ID!): Opinion
 
-    updateGetHealthCheckData(boardId: String!, meId: ID!): getHealthCheck
+    subOnUpdateHealthCheck(meId: ID!, teamId: ID!): getHealthCheck
   }
 `;
 
