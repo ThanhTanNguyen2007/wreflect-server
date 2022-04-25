@@ -3,7 +3,7 @@ import { Opinion } from '@prisma/client';
 import { RequestWithUserInfo } from './../types';
 import { StatusCodes } from 'http-status-codes';
 import { ApolloError } from 'apollo-server-errors';
-import { createRemarkType, removeRemarkType } from './../apollo/typeDefss/remarkTypeDefs';
+import { createRemarkType, removeRemarkType } from '../apollo/TypeDefs/remarkTypeDefs';
 import prisma from '../prisma';
 import { checkIsMemberOfTeam, allowUpdatingRemark, allowUpdatingOpinion } from './essential';
 import { remark } from '.';

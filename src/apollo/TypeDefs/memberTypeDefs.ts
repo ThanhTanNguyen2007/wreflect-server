@@ -12,7 +12,6 @@ const typeDefs = gql`
     meetingNote: String
     invitedBy: String
     joinedAt: String!
-
     user: User
     team: Team
     opinions: [Opinion]
@@ -20,6 +19,8 @@ const typeDefs = gql`
     assessments: [Assessment]
     memberComments: [MemberComment]
     memberAnswers: [MemberAnswer]
+    results: [Result]
+    evaluations: [Evaluation]
   }
 `;
 

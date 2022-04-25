@@ -22,8 +22,9 @@ const typeDefs = gql`
     introduction: String
     talent: String
     interest: String
-
     members: [Member]
+    notifications: [Notification]
+    skillValues: [UserOnCriteria]
   }
 `;
 

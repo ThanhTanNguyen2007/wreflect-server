@@ -7,7 +7,7 @@ import { errorName } from '../constant/errorsConstant';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import { checkIsMemberOfTeam, checkIsMemberOwningTeam, allowUpdatingOpinion } from './essential';
 import error from '../errorsManagement';
-import { updateActionTrackerType } from '../apollo/typeDefss/opinionTypeDefs';
+import { updateActionTrackerType } from '../apollo/TypeDefs/opinionTypeDefs';
 
 export const getTeams = async (
   isGettingAll = false,

@@ -5,7 +5,7 @@ const typeDefs = gql`
     id: ID
     name: String
     description: String
-    assessmentOnCriteriaList: [AssessmentOnCriteria]
+    answerOnCriteriaList: [AnswerOnCriteria]
   }
 `;
 

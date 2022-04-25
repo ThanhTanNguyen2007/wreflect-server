@@ -1,7 +1,31 @@
-import { answerHealthCheckArgs, startSurveyArgs, reopenHealthCheckArgs } from './typeDefss/healthCheckTypeDefs';
-import { createRemarkType, removeRemarkType } from './typeDefss/remarkTypeDefs';
+import _ from 'lodash';
+import {
+  createAssessmentType,
+  getAssessmentArgs,
+  getAssessmentListType,
+  submitDoPersonalReflection,
+} from './TypeDefs/Assessment/assessmentTypes';
+import {
+  answerHealthCheckArgs,
+  startSurveyArgs,
+  reopenHealthCheckArgs,
+} from './TypeDefs/HealthCheck/healthCheckTypeDefs';
+import { createRemarkType, removeRemarkType } from './TypeDefs/remarkTypeDefs';
 import { addMemberToTeamType, RequestWithUserInfo } from './../types';
-import { member, team, user, board, column, opinion, remark, healthCheck, criteria } from '../services';
+import {
+  member,
+  team,
+  user,
+  board,
+  column,
+  opinion,
+  remark,
+  healthCheck,
+  criteria,
+  assessment,
+  analysis,
+  notification,
+} from '../services';
 import { withFilter } from 'graphql-subscriptions';
 
 import {
@@ -12,9 +36,10 @@ import {
   updateOpinionType,
   convertToActionType,
   updateActionTrackerType,
-} from './typeDefss/opinionTypeDefs';
+} from './TypeDefs/opinionTypeDefs';
 import { pubsub } from '../pubSub';
-import { updateBoardType, createBoardType, deleteBoardType } from './typeDefss/boardTypeDefs';
+import { updateBoardType, createBoardType, deleteBoardType } from './TypeDefs/Board/boardTypes';
+import { string } from 'zod';
 
 const resolvers = {
   Query: {
@@ -35,8 +60,10 @@ const resolvers = {
       const myTeam = await team.getTeam(args.teamId, isAdmin ? undefined : id);
       return myTeam;
     },
-    account: async (_, args) => {
-      return await user.getUser(args.userId);
+    account: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const userData = await user.getUser(meId);
+      return userData;
     },
 
     board: async (_, args, { req }: { req: RequestWithUserInfo }) => {
@@ -50,10 +77,50 @@ const resolvers = {
       return result;
     },
 
-    criteriaList: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+    getEssentialData: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const criteriaList = await criteria.getListCriteria();
-      return criteriaList;
+      return {
+        criteriaList,
+      };
     },
+    getAssessmentsList: async (_, args: getAssessmentListType, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const assessmentList = await assessment.getListAssessment(meId, args);
+      return assessmentList;
+    },
+    getAssessment: async (_, args: getAssessmentArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const assessmentData = await assessment.getAssessment(meId, args);
+      return assessmentData;
+    },
+
+    getAnalysisAssessment: async (
+      _,
+      args: { teamId: string; assessmentId: string; memberId: string },
+      { req }: { req: RequestWithUserInfo },
+    ) => {
+      const { id: meId } = req?.user || {};
+      const assessment = await analysis?.analysisAssessment(meId, args);
+      return assessment;
+    },
+
+    getNotifications: async (_, args: { offSet: number; limit: number }, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const notificationsList = await notification?.getListNotifications(meId, args);
+      return notificationsList;
+    },
+
+    getNumOfUnSeenNoti: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const numOfUnSeenNoti = await notification?.getNumOfUnSeenNoti(meId);
+      return numOfUnSeenNoti;
+    },
+
+    // getSkillsAnlytic: async (_, args, {req}: {req: RequestWithUserInfo}) => {
+    //   const {id: meId} = req?.user || {}
+    //   const getSkillData = await user?.getSkillsAnalytic(meId);
+    //   return getSkillData;
+    // }
   },
   Mutation: {
     updateMeetingNote: async (_, args, { req }: { req: RequestWithUserInfo }) => {
@@ -290,6 +357,54 @@ const resolvers = {
       });
       return teamUpdated;
     },
+
+    createAssessment: async (_, args: createAssessmentType, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const assessmentData = await assessment.createAssessment(meId, args);
+      // pubsub.publish('CREATE_ASSESSMENT', {
+      //   subOnUpdateTeam: team,
+      //   teamId: args.teamId,
+      // });
+      return assessmentData;
+    },
+
+    doPersonalReflection: async (_, args: submitDoPersonalReflection, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const assessmentData = await assessment?.submitDoPersonal(meId, args);
+      return assessmentData;
+    },
+
+    updateAssessment: async (
+      _,
+      args: { teamId: string; assessmentId: string; assessmentName: string },
+      { req }: { req: RequestWithUserInfo },
+    ) => {
+      const { id: meId } = req?.user || {};
+      const updatingAssessment = await assessment?.updatingAssessment(meId, args);
+      return updatingAssessment;
+    },
+
+    deleteAssessment: async (
+      _,
+      args: { teamId: string; assessmentId: string },
+      { req }: { req: RequestWithUserInfo },
+    ) => {
+      const { id: meId } = req?.user || {};
+      const deletingAssessment = await assessment?.deleteAssessment(meId, args);
+      return deletingAssessment;
+    },
+
+    seenNotification: async (_, args: { notificationId: string }, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const updatedNotification = await notification?.seenNotification(meId, args);
+      return updatedNotification;
+    },
+
+    removeNotification: async (_, args: { notificationId: string }, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const removingNotification = await notification?.removeNotification(meId, args);
+      return removingNotification;
+    },
   },
   Subscription: {
     // supOnUpdateMember: {
@@ -384,7 +499,22 @@ const resolvers = {
       const members = await member.getListMembers(_.id);
       return members;
     },
+    // assessments: async (currentValue, args: getAssessmentListType, test) => {
+    //   const assessments = await assessment.getListAssessment(currentValue.id, _.isEmpty(args) ? undefined : args);
+    //   return assessments;
+    // },
   },
+  // Assessment: {
+  //   assessmentOnCriteriaList:  async (_) => {
+  //     const assessmentOnCriteriaList = await assessment.
+  //   }
+  // },
+  // Assessment: {
+  //   assessmentOnCriteriaList: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+  //     const assessmentOnCriteriaList = await assessment.getListAssessmentOnCriteriaList(_.id);
+  //     return assessmentOnCriteriaList;
+  //   },
+  // },
   Board: {
     team: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId, isAdmin } = req?.user || {};

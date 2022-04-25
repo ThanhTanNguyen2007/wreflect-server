@@ -14,7 +14,7 @@ const typeDefs = gql`
     members: [Member]
     boards(meId: ID): [Board]
     healthCheck: [HealthCheck]
-    assessment: [Assessment]
+    assessments: [Assessment]
   }
 
   enum TeamStatus {

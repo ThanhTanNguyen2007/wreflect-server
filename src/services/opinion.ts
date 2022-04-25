@@ -9,7 +9,7 @@ import {
   orderOpinionType,
   removeOpinionType,
   updateOpinionType,
-} from '../apollo/typeDefss/opinionTypeDefs';
+} from '../apollo/TypeDefs/opinionTypeDefs';
 import { RequestWithUserInfo } from '../types';
 import error from '../errorsManagement';
 import { member, user } from '.';

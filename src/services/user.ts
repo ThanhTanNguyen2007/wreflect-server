@@ -1,3 +1,4 @@
+import { checkIsMemberOfTeam } from './essential';
 import { update } from 'lodash';
 import { errorName } from '../constant/errorsConstant';
 import prisma from '../prisma';
@@ -14,6 +15,8 @@ export const findOrCreateUserByEmail = async (email: string, picture: string, na
         members: true,
       },
     });
+
+    // const getAllCriteria = await prisma?.user?.findMany();
 
     const updateData =
       findUser && findUser.nickname === 'UnRegistered' && findUser.members[0].isPendingInvitation
@@ -45,6 +48,7 @@ export const findOrCreateUserByEmail = async (email: string, picture: string, na
         userStatus: 'ONLINE',
         picture,
         nickname,
+        skillValues: {},
       },
     });
 
@@ -110,10 +114,14 @@ export const getUser = async (userId: string) => {
         id: userId,
       },
       include: {
-        members: true,
+        notifications: true,
+        skillValues: {
+          include: {
+            criteria: true,
+          },
+        },
       },
     });
-    // if (!user) throw new Error(errorName.NOTFOUND);
 
     return user;
   } catch (error) {
@@ -140,4 +148,51 @@ export const updateUser = async (userId: string, args: any) => {
     logger.error('Error in updateUser service');
     throw error;
   }
+};
+
+type cachedSkillsValue = {
+  criteriaId: string;
+  value: number;
+  userId: string;
+  date: string;
+};
+
+export const getSkillsAnalytic = async (meId: string) => {
+  const skillsAnalytic = await prisma?.answerOnCriteria?.groupBy({
+    where: {
+      Result: {
+        concerningMember: {
+          userId: meId,
+        },
+      },
+    },
+    by: ['criteriaId'],
+    _avg: {
+      point: true,
+    },
+    _count: {
+      point: true,
+    },
+    _max: {
+      point: true,
+    },
+    _sum: {
+      point: true,
+    },
+  });
+
+  const skillList = await prisma?.criteria?.findMany({
+    where: {
+      id: { in: [...skillsAnalytic?.map((x) => x?.criteriaId)] },
+    },
+  });
+
+  const mergedData = await Promise.all(
+    skillList?.map((x) => {
+      const skill = skillsAnalytic?.find((y) => y?.criteriaId === x?.id);
+      if (skill) return { criteria: x, _avg: skill?._avg, _count: skill?._count };
+    }),
+  );
+
+  return mergedData;
 };

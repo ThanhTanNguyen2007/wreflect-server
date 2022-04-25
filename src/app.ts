@@ -3,8 +3,6 @@ import { StatusCodes } from 'http-status-codes';
 import { ApolloError } from 'apollo-server-errors';
 dotenv.config();
 import http from 'http';
-import https from 'https';
-import fs from 'fs';
 import cors from 'cors';
 import express from 'express';
 import cookieParser from 'cookie-parser';
@@ -14,6 +12,7 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { ApolloServer } from 'apollo-server-express';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { constraintDirective, constraintDirectiveTypeDefs } from 'graphql-constraint-directive';
+import cron from 'node-cron';
 
 import './prisma'; // eager load to test connection
 import logger from './logger';
@@ -22,8 +21,12 @@ import apiRouter from './apiRouter';
 import { resolvers, typeDefs } from './apollo';
 import sessionManager from './middleware/sessionManager';
 import depthLimit from 'graphql-depth-limit';
-
-// import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import { sentRemiderNotification } from './services/notification';
+import {
+  endAssessmentThatComplete,
+  remiderUserNotSubmitAssessment,
+  updateSkillsValueOfUser,
+} from './services/schedule';
 
 async function startApolloServer(typeDefs, resolvers) {
   const app = express();
@@ -41,7 +44,24 @@ async function startApolloServer(typeDefs, resolvers) {
 
   app.use('/api', apiRouter());
 
-  let schema = makeExecutableSchema({
+  cron.schedule('* */1 * * *', async () => {
+    await sentRemiderNotification();
+  });
+
+  cron.schedule('0 0 */1 * *', async () => {
+    await remiderUserNotSubmitAssessment();
+    await endAssessmentThatComplete();
+  });
+
+  // cron.schedule('0 0 */10 * *', async () => {
+  //   await updateSkillsValueOfUser()
+  // })
+
+  cron.schedule('*/1 * * * *', async () => {
+    await updateSkillsValueOfUser();
+  });
+
+let schema = makeExecutableSchema({
     typeDefs: [constraintDirectiveTypeDefs, ...typeDefs],
     resolvers,
   });

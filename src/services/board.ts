@@ -1,13 +1,7 @@
-import { RequestWithUserInfo } from './../types';
-import { createBoardType, deleteBoardType, updateBoardType } from './../apollo/typeDefss/boardTypeDefs';
-import { StatusCodes } from 'http-status-codes';
-import { ApolloError } from 'apollo-server-errors';
+import { createBoardType, deleteBoardType, updateBoardType } from '../apollo/TypeDefs/Board/boardTypes';
 import prisma from '../prisma';
-import _, { now } from 'lodash';
 import error from '../errorsManagement';
-import { P } from 'pino';
-import { argsToArgsConfig } from 'graphql/type/definition';
-import { checkIsMemberOwningTeam, allowUpdatingBoard } from './essential';
+import { checkIsMemberOwningTeam } from './essential';
 
 export const getListBoardOfTeam = async (teamId: string) => {
   const boards = await prisma.board.findMany({
@@ -146,7 +140,7 @@ export const updateBoard = async (meId: string, args: updateBoardType) => {
       timerInProgress: args?.timerInProgress,
       type: args?.type,
       currentPhase: args?.currentPhase,
-      endTime: args?.endTime ? new Date(+args.endTime) : new Date(),
+      endTime: args?.endTime ? new Date(args.endTime) : new Date(),
       columns: {
         updateMany: [
           {

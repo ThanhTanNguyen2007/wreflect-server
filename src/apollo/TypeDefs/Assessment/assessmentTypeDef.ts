@@ -2,22 +2,24 @@ import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
   enum AssessmentStatus {
-    PLANNED
-    DOING
-    COMPLETE
-    REOPENED
+    Planned
+    Doing
+    Complete
+    Reopened
   }
 
   type Assessment {
     id: ID
     name: String
+    createdAt: String
     startDate: String
     endDate: String
     teamId: String
-    ownerId: String
-    ownerMember: Member
+    creatorId: String
     status: AssessmentStatus
-    assessmentOnCriteriaList: [AssessmentOnCriteria]
+    team: Team
+    creator: Member
+    evaluations: [Evaluation]
   }
 `;
 

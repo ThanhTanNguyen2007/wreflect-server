@@ -1,12 +1,13 @@
 import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
-  type AssessmentOnCriteria {
-    asssessmentId: String
+  type AnswerOnCriteria {
+    id: ID
     criteriaId: String
-    createdAt: String
-    createdBy: String
-    assessment: Assessment
+    resultId: String
+    point: Int
+    comment: String
+    updatedAt: String
     criteria: Criteria
   }
 `;

@@ -36,6 +36,19 @@ const typeDefs = gql`
     draggableId: String!
   }
 
+  input AnswerOnCriteriaInput {
+    id: ID
+    criteriaId: String
+    point: Int
+    comment: String
+  }
+
+  input ResultInput {
+    id: ID
+    concerningMemberId: String
+    answerOnCriteriaList: [AnswerOnCriteriaInput]
+  }
+
   enum PhaseType {
     DEFAULT
     PHASE
@@ -234,6 +247,31 @@ const typeDefs = gql`
       status: OpinionStatus!
       responsible: String!
     ): Team
+
+    createAssessment(
+      teamId: String!
+      nameAssessment: String!
+      startDate: String!
+      endDate: String!
+      assessmentId: String
+      criteriaList: [String!]!
+      memberIds: [String]!
+    ): Assessment
+
+    updateAssessment(teamId: String!, assessmentName: String!, assessmentId: String!): Assessment
+
+    deleteAssessment(teamId: String!, assessmentId: String!): Assessment
+
+    doPersonalReflection(
+      teamId: String!
+      assessmentId: String!
+      assessorId: String!
+      results: [ResultInput]
+    ): Assessment
+
+    seenNotification(notificationId: String!): Notification
+    removeNotification(notificationId: String!): Notification
+
   }
 `;
 

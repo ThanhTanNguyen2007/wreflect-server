@@ -3,7 +3,7 @@ import {
   startSurveyArgs,
   answerHealthCheckArgs,
   reopenHealthCheckArgs,
-} from './../apollo/typeDefss/healthCheckTypeDefs';
+} from '../apollo/TypeDefs/HealthCheck/healthCheckTypeDefs';
 import prisma from '../prisma';
 import { checkIsMemberOwningTeam, checkIsMemberOfTeam } from './essential';
 
