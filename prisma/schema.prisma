@@ -48,8 +48,8 @@ model Evaluation {
   assessmentId String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt()
-  assessor     Member      @relation(fields: [assessorId], references: [id])
-  assessment   Assessment? @relation(fields: [assessmentId], references: [id])
+  assessor     Member      @relation(fields: [assessorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  assessment   Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   results      Result[]
 
   @@unique([assessmentId, assessorId])
@@ -60,8 +60,8 @@ model Result {
   concerningMemberId   String
   evaluationId         String?
   answerOnCriteriaList AnswerOnCriteria[]
-  concerningMember     Member             @relation(fields: [concerningMemberId], references: [id])
-  evaluation           Evaluation?        @relation(fields: [evaluationId], references: [id])
+  concerningMember     Member             @relation(fields: [concerningMemberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  evaluation           Evaluation?        @relation(fields: [evaluationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model AnswerOnCriteria {
@@ -72,7 +72,7 @@ model AnswerOnCriteria {
   comment    String?
   updatedAt  DateTime @updatedAt()
   criteria   Criteria @relation(fields: [criteriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  Result     Result?  @relation(fields: [resultId], references: [id])
+  Result     Result?  @relation(fields: [resultId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Criteria {
@@ -103,28 +103,28 @@ model Team {
   members      Member[]
   boards       Board[]
   healthChecks HealthCheck[]
-  templates    Template[]
+  // templates    Template[]
   assessments  Assessment[]
 }
 
-model Template {
-  id                   String             @id @default(uuid())
-  title                String
-  type                 String
-  teamId               String?
-  description          String
-  team                 Team?              @relation(fields: [teamId], references: [id])
-  healthCheckQuestions TemplateQuestion[]
-}
+// model Template {
+//   id                   String             @id @default(uuid())
+//   title                String
+//   type                 String
+//   teamId               String?
+//   description          String
+//   team                 Team?              @relation(fields: [teamId], references: [id])
+//   healthCheckQuestions TemplateQuestion[]
+// }
 
-model TemplateQuestion {
-  id                  String                          @id @default(uuid())
-  title               String
-  templateId          String
-  healthCheckTemplate Template                        @relation(fields: [templateId], references: [id])
-  description         String
-  MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
-}
+// model TemplateQuestion {
+//   id                  String                          @id @default(uuid())
+//   title               String
+//   templateId          String
+//   healthCheckTemplate Template                        @relation(fields: [templateId], references: [id])
+//   description         String
+//   MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+// }
 
 model Board {
   id              String       @id @default(uuid())
@@ -151,37 +151,37 @@ model Board {
 }
 
 model HealthCheck {
-  id                  String                          @id @default(uuid())
-  teamId              String
-  boardId             String                          @unique
-  templateId          String
-  createdAt           DateTime                        @default(now())
-  createdBy           String
-  updatedAt           DateTime                        @updatedAt
-  updatedBy           String?
-  isAnonymous         Boolean
-  isCustom            Boolean
-  status              StatusHealthCheck
-  board               Board                           @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  team                Team                            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
-  memberAnswers       MemberAnswer[]
-  memberComments      MemberComment[]
+  id             String            @id @default(uuid())
+  teamId         String
+  boardId        String            @unique
+  templateId     String
+  createdAt      DateTime          @default(now())
+  createdBy      String
+  updatedAt      DateTime          @updatedAt
+  updatedBy      String?
+  isAnonymous    Boolean
+  isCustom       Boolean
+  status         StatusHealthCheck
+  board          Board             @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team           Team              @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  // MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+  memberAnswers  MemberAnswer[]
+  memberComments MemberComment[]
 
   @@unique([teamId, boardId])
 }
 
-model MemberOnHealthCheckOnQuestion {
-  id            String           @id @default(uuid())
-  healthCheckId String
-  questionId    String
-  memberId      String
-  point         String
-  comment       String
-  healthCheck   HealthCheck      @relation(fields: [healthCheckId], references: [id])
-  question      TemplateQuestion @relation(fields: [questionId], references: [id])
-  member        Member           @relation(fields: [memberId], references: [id])
-}
+// model MemberOnHealthCheckOnQuestion {
+//   id            String           @id @default(uuid())
+//   healthCheckId String
+//   questionId    String
+//   memberId      String
+//   point         String
+//   comment       String
+//   healthCheck   HealthCheck      @relation(fields: [healthCheckId], references: [id],  onDelete: Cascade, onUpdate: Cascade)
+//   question      TemplateQuestion @relation(fields: [questionId], references: [id] , onDelete: Cascade, onUpdate: Cascade)
+//   member        Member           @relation(fields: [memberId], references: [id],  onDelete: Cascade, onUpdate: Cascade)
+// }
 
 enum BoardType {
   DEFAULT
@@ -257,24 +257,24 @@ enum TeamStatus {
 }
 
 model Member {
-  id                  String                          @id @default(uuid())
+  id                  String          @id @default(uuid())
   userId              String
   teamId              String
-  isOwner             Boolean                         @default(false)
-  isSuperOwner        Boolean                         @default(false)
-  isPendingInvitation Boolean                         @default(false)
-  isGuess             Boolean                         @default(false)
+  isOwner             Boolean         @default(false)
+  isSuperOwner        Boolean         @default(false)
+  isPendingInvitation Boolean         @default(false)
+  isGuess             Boolean         @default(false)
   meetingNote         String?
   invitedBy           String?
-  joinedAt            DateTime                        @default(now())
-  user                User                            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  team                Team                            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  joinedAt            DateTime        @default(now())
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team                Team            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   opinions            Opinion[]
   Remarks             Remark[]
   assessments         Assessment[]
   memberComments      MemberComment[]
   memberAnswers       MemberAnswer[]
-  MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+  // MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
   results             Result[]
   evaluations         Evaluation[]
 
@@ -355,8 +355,8 @@ model UserOnCriteria {
   userId     String
   criteriaId String
   value      Float
-  user       User     @relation(fields: [userId], references: [id])
-  criteria   Criteria @relation(fields: [criteriaId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  criteria   Criteria @relation(fields: [criteriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([userId, criteriaId])
 }
