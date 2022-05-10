@@ -1,4 +1,4 @@
-import { Opinion } from '@prisma/client';
+import { Opinion, HealthCheck } from '@prisma/client';
 import { gql } from 'apollo-server-express';
 const typeDefs = gql`
   type AddMembersMutationResponse {
@@ -47,6 +47,12 @@ const typeDefs = gql`
     id: ID
     concerningMemberId: String
     answerOnCriteriaList: [AnswerOnCriteriaInput]
+  }
+
+  input questionsInput {
+    title: String
+    description: String
+    color: String
   }
 
   enum PhaseType {
@@ -272,6 +278,8 @@ const typeDefs = gql`
     seenNotification(notificationId: String!): Notification
     removeNotification(notificationId: String!): Notification
 
+    createTemplateHealthCheck(name: String!, questions: [questionsInput!]): Template
+    updateTemplateHealthCheck(templateId: String!, name: String!, questions: [questionsInput!]): Template
   }
 `;
 

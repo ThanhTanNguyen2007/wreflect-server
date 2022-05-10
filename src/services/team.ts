@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import config from '../config';
 import prisma from './../prisma';
 import { createTeamType, RequestWithUserInfo, updateTeamType } from '../types';
-import { Team, TeamStatus, Member } from '@prisma/client';
+import { Team, TeamStatus, MemberOnHealthCheckOnQuestion} from '@prisma/client';
 import { errorName } from '../constant/errorsConstant';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import { checkIsMemberOfTeam, checkIsMemberOwningTeam, allowUpdatingOpinion } from './essential';

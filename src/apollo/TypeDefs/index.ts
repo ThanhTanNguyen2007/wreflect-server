@@ -21,6 +21,9 @@ import { default as AnswerOnCriteria } from './answerOnCriteriaTypeDefs';
 import { default as Notification } from './notificationTypeDefs';
 import { default as RemiderNotification } from './remiderNotificationTypeDefs';
 import { default as UserOnCriteria } from './userOnCriteriaTypeDefs';
+import { default as Template } from './templateTypeDefs';
+import { default as TemplateQuestion } from './templateQuestionTypeDef';
+import { default as MemberOnHealthCheckOnQuestion } from './memberOnHealthCheckOnQuestion';
 
 export default [
   Answer,
@@ -46,4 +49,7 @@ export default [
   Notification,
   RemiderNotification,
   UserOnCriteria,
+  Template,
+  TemplateQuestion,
+  MemberOnHealthCheckOnQuestion,
 ];

@@ -61,6 +61,13 @@ const typeDefs = gql`
     criteriaList: [Criteria]
   }
 
+  type Templates {
+    data: [Template]
+    total: Int
+    page: Int
+    size: Int
+  }
+
   enum filterOfAssessmentList {
     NAME
     DATE
@@ -111,6 +118,7 @@ const typeDefs = gql`
     getNumOfUnSeenNoti: Int
 
     # getSkillsAnalytic(notificationId): Assessment
+    getTemplates(isGettingAll: Boolean, search: String, offSet: Int, limit: Int): Templates
   }
 `;
 

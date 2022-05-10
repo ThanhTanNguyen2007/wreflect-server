@@ -61,7 +61,7 @@ async function startApolloServer(typeDefs, resolvers) {
     await updateSkillsValueOfUser();
   });
 
-let schema = makeExecutableSchema({
+  let schema = makeExecutableSchema({
     typeDefs: [constraintDirectiveTypeDefs, ...typeDefs],
     resolvers,
   });

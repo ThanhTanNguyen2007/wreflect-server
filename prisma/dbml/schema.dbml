@@ -89,27 +89,33 @@ Table Team {
   members Member [not null]
   boards Board [not null]
   healthChecks HealthCheck [not null]
-  templates Template [not null]
+  teamTemplate Template [not null]
   assessments Assessment [not null]
 }
 
 Table Template {
   id String [pk]
   title String [not null]
-  type String [not null]
+  isDefault Boolean [not null]
   teamId String
-  description String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   team Team
   healthCheckQuestions TemplateQuestion [not null]
+
+  indexes {
+    (title) [unique]
+  }
 }
 
 Table TemplateQuestion {
   id String [pk]
   title String [not null]
   templateId String [not null]
+  color String [not null]
   healthCheckTemplate Template [not null]
   description String [not null]
-  MemberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
+  memberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
 }
 
 Table Board {
@@ -151,8 +157,6 @@ Table HealthCheck {
   board Board [not null]
   team Team [not null]
   MemberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
-  memberAnswers MemberAnswer [not null]
-  memberComments MemberComment [not null]
 
   indexes {
     (teamId, boardId) [unique]
@@ -164,7 +168,7 @@ Table MemberOnHealthCheckOnQuestion {
   healthCheckId String [not null]
   questionId String [not null]
   memberId String [not null]
-  point String [not null]
+  point Int [not null]
   comment String [not null]
   healthCheck HealthCheck [not null]
   question TemplateQuestion [not null]
@@ -231,55 +235,12 @@ Table Member {
   opinions Opinion [not null]
   Remarks Remark [not null]
   assessments Assessment [not null]
-  memberComments MemberComment [not null]
-  memberAnswers MemberAnswer [not null]
   MemberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
   results Result [not null]
   evaluations Evaluation [not null]
 
   indexes {
     (userId, teamId) [unique]
-  }
-}
-
-Table MemberAnswer {
-  id String [pk]
-  templateId String [not null]
-  healthCheckId String [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  memberId String [not null]
-  answers Answer [not null]
-  healthCheck HealthCheck [not null]
-  member Member [not null]
-
-  indexes {
-    (healthCheckId, memberId) [unique]
-  }
-}
-
-Table Answer {
-  id String [pk]
-  questionId String [not null]
-  value String [not null]
-  memberAnswersId String
-  memberAnswer MemberAnswer
-}
-
-Table MemberComment {
-  id String [pk]
-  templateId String [not null]
-  healthCheckId String [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  memberId String [not null]
-  questionId String [not null]
-  text String [not null]
-  member Member [not null]
-  healthCheck HealthCheck [not null]
-
-  indexes {
-    (healthCheckId, questionId, memberId) [unique]
   }
 }
 
@@ -439,16 +400,6 @@ Ref: Remark.authorId > Member.id
 Ref: Member.userId > User.id
 
 Ref: Member.teamId > Team.id
-
-Ref: MemberAnswer.healthCheckId > HealthCheck.id
-
-Ref: MemberAnswer.memberId > Member.id
-
-Ref: Answer.memberAnswersId > MemberAnswer.id
-
-Ref: MemberComment.memberId > Member.id
-
-Ref: MemberComment.healthCheckId > HealthCheck.id
 
 Ref: UserOnCriteria.userId > User.id
 

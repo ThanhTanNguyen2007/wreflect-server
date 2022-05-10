@@ -103,28 +103,32 @@ model Team {
   members      Member[]
   boards       Board[]
   healthChecks HealthCheck[]
-  // templates    Template[]
+  teamTemplate Template[]
   assessments  Assessment[]
 }
 
-// model Template {
-//   id                   String             @id @default(uuid())
-//   title                String
-//   type                 String
-//   teamId               String?
-//   description          String
-//   team                 Team?              @relation(fields: [teamId], references: [id])
-//   healthCheckQuestions TemplateQuestion[]
-// }
+model Template {
+  id                   String             @id @default(uuid())
+  title                String
+  isDefault            Boolean
+  teamId               String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt()
+  team                 Team?              @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  healthCheckQuestions TemplateQuestion[]
 
-// model TemplateQuestion {
-//   id                  String                          @id @default(uuid())
-//   title               String
-//   templateId          String
-//   healthCheckTemplate Template                        @relation(fields: [templateId], references: [id])
-//   description         String
-//   MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
-// }
+  @@unique([title])
+}
+
+model TemplateQuestion {
+  id                  String                          @id @default(uuid())
+  title               String
+  templateId          String
+  color               String
+  healthCheckTemplate Template                        @relation(fields: [templateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  description         String
+  memberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+}
 
 model Board {
   id              String       @id @default(uuid())
@@ -151,37 +155,37 @@ model Board {
 }
 
 model HealthCheck {
-  id             String            @id @default(uuid())
-  teamId         String
-  boardId        String            @unique
-  templateId     String
-  createdAt      DateTime          @default(now())
-  createdBy      String
-  updatedAt      DateTime          @updatedAt
-  updatedBy      String?
-  isAnonymous    Boolean
-  isCustom       Boolean
-  status         StatusHealthCheck
-  board          Board             @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  team           Team              @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  // MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
-  memberAnswers  MemberAnswer[]
-  memberComments MemberComment[]
+  id                  String                          @id @default(uuid())
+  teamId              String
+  boardId             String                          @unique
+  templateId          String
+  createdAt           DateTime                        @default(now())
+  createdBy           String
+  updatedAt           DateTime                        @updatedAt
+  updatedBy           String?
+  isAnonymous         Boolean
+  isCustom            Boolean
+  status              StatusHealthCheck
+  board               Board                           @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team                Team                            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+  // memberAnswers       MemberAnswer[]
+  // memberComments      MemberComment[]
 
   @@unique([teamId, boardId])
 }
 
-// model MemberOnHealthCheckOnQuestion {
-//   id            String           @id @default(uuid())
-//   healthCheckId String
-//   questionId    String
-//   memberId      String
-//   point         String
-//   comment       String
-//   healthCheck   HealthCheck      @relation(fields: [healthCheckId], references: [id],  onDelete: Cascade, onUpdate: Cascade)
-//   question      TemplateQuestion @relation(fields: [questionId], references: [id] , onDelete: Cascade, onUpdate: Cascade)
-//   member        Member           @relation(fields: [memberId], references: [id],  onDelete: Cascade, onUpdate: Cascade)
-// }
+model MemberOnHealthCheckOnQuestion {
+  id            String           @id @default(uuid())
+  healthCheckId String
+  questionId    String
+  memberId      String
+  point         Int
+  comment       String
+  healthCheck   HealthCheck      @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  question      TemplateQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  member        Member           @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
 
 enum BoardType {
   DEFAULT
@@ -257,24 +261,24 @@ enum TeamStatus {
 }
 
 model Member {
-  id                  String          @id @default(uuid())
+  id                  String                          @id @default(uuid())
   userId              String
   teamId              String
-  isOwner             Boolean         @default(false)
-  isSuperOwner        Boolean         @default(false)
-  isPendingInvitation Boolean         @default(false)
-  isGuess             Boolean         @default(false)
+  isOwner             Boolean                         @default(false)
+  isSuperOwner        Boolean                         @default(false)
+  isPendingInvitation Boolean                         @default(false)
+  isGuess             Boolean                         @default(false)
   meetingNote         String?
   invitedBy           String?
-  joinedAt            DateTime        @default(now())
-  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  team                Team            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  joinedAt            DateTime                        @default(now())
+  user                User                            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team                Team                            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   opinions            Opinion[]
   Remarks             Remark[]
   assessments         Assessment[]
-  memberComments      MemberComment[]
-  memberAnswers       MemberAnswer[]
-  // MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+  // memberComments      MemberComment[]
+  // memberAnswers       MemberAnswer[]
+  MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
   results             Result[]
   evaluations         Evaluation[]
 
@@ -286,42 +290,42 @@ enum UserConnectionStatus {
   Sending
 }
 
-model MemberAnswer {
-  id            String      @id @default(uuid())
-  templateId    String
-  healthCheckId String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  memberId      String
-  answers       Answer[]
-  healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+// model MemberAnswer {
+//   id            String      @id @default(uuid())
+//   templateId    String
+//   healthCheckId String
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+//   memberId      String
+//   answers       Answer[]
+//   healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+//   member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([healthCheckId, memberId])
-}
+//   @@unique([healthCheckId, memberId])
+// }
 
-model Answer {
-  id              String        @id @default(uuid())
-  questionId      String
-  value           String
-  memberAnswersId String?
-  memberAnswer    MemberAnswer? @relation(fields: [memberAnswersId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-}
+// model Answer {
+//   id              String        @id @default(uuid())
+//   questionId      String
+//   value           String
+//   memberAnswersId String?
+//   memberAnswer    MemberAnswer? @relation(fields: [memberAnswersId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+// }
 
-model MemberComment {
-  id            String      @id @default(uuid())
-  templateId    String
-  healthCheckId String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  memberId      String
-  questionId    String
-  text          String
-  member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+// model MemberComment {
+//   id            String      @id @default(uuid())
+//   templateId    String
+//   healthCheckId String
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+//   memberId      String
+//   questionId    String
+//   text          String
+//   member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+//   healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([healthCheckId, questionId, memberId])
-}
+//   @@unique([healthCheckId, questionId, memberId])
+// }
 
 model User {
   id                 String           @id @default(uuid())

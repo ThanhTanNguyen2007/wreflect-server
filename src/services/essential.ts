@@ -2,6 +2,10 @@ import prisma from './../prisma';
 import error from '../errorsManagement';
 import { Member, User } from '@prisma/client';
 
+export const checkIsAdmin = async (isAdmin: boolean) => {
+  if (!isAdmin) return error?.Forbidden();
+};
+
 export const checkIsMemberOfTeam = async (teamId: string, userId: string) => {
   const member = await prisma.member.findUnique({
     where: {

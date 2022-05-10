@@ -45,6 +45,7 @@ CREATE TABLE "Assessment" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3) NOT NULL,
+    "completedDate" TIMESTAMP(3),
     "teamId" TEXT NOT NULL,
     "creatorId" TEXT NOT NULL,
     "status" "AssessmentStatus" NOT NULL,
@@ -113,9 +114,10 @@ CREATE TABLE "Team" (
 CREATE TABLE "Template" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
+    "isDefault" BOOLEAN NOT NULL,
     "teamId" TEXT,
-    "description" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     PRIMARY KEY ("id")
 );
@@ -125,6 +127,7 @@ CREATE TABLE "TemplateQuestion" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "templateId" TEXT NOT NULL,
+    "color" TEXT NOT NULL,
     "description" TEXT NOT NULL,
 
     PRIMARY KEY ("id")
@@ -177,7 +180,7 @@ CREATE TABLE "MemberOnHealthCheckOnQuestion" (
     "healthCheckId" TEXT NOT NULL,
     "questionId" TEXT NOT NULL,
     "memberId" TEXT NOT NULL,
-    "point" TEXT NOT NULL,
+    "point" INTEGER NOT NULL,
     "comment" TEXT NOT NULL,
 
     PRIMARY KEY ("id")
@@ -246,26 +249,13 @@ CREATE TABLE "Member" (
 );
 
 -- CreateTable
-CREATE TABLE "Notification" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "linkRedirect" TEXT,
-    "isSeen" BOOLEAN NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isAdmin" BOOLEAN NOT NULL DEFAULT false,
-    "isSeenNotification" BOOLEAN NOT NULL,
+    "isSeenNotification" BOOLEAN NOT NULL DEFAULT false,
     "userStatus" "UserStatus" NOT NULL DEFAULT E'OFFLINE',
     "nickname" VARCHAR(150) NOT NULL,
     "picture" VARCHAR(500) NOT NULL,
@@ -281,37 +271,25 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "MemberAnswer" (
+CREATE TABLE "UserOnCriteria" (
     "id" TEXT NOT NULL,
-    "templateId" TEXT NOT NULL,
-    "healthCheckId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "memberId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "criteriaId" TEXT NOT NULL,
+    "value" DOUBLE PRECISION NOT NULL,
 
     PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Answer" (
+CREATE TABLE "Notification" (
     "id" TEXT NOT NULL,
-    "questionId" TEXT NOT NULL,
-    "value" TEXT NOT NULL,
-    "memberAnswersId" TEXT,
-
-    PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "MemberComment" (
-    "id" TEXT NOT NULL,
-    "templateId" TEXT NOT NULL,
-    "healthCheckId" TEXT NOT NULL,
+    "receiverId" TEXT NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "linkRedirect" TEXT,
+    "isSeen" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "memberId" TEXT NOT NULL,
-    "questionId" TEXT NOT NULL,
-    "text" TEXT NOT NULL,
 
     PRIMARY KEY ("id")
 );
@@ -319,10 +297,10 @@ CREATE TABLE "MemberComment" (
 -- CreateTable
 CREATE TABLE "RemiderNotification" (
     "id" TEXT NOT NULL,
-    "dateSend" TIMESTAMP(3) NOT NULL,
+    "dateSent" TIMESTAMP(3) NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "sendBy" TEXT NOT NULL,
+    "sentBy" TEXT NOT NULL,
     "sendTo" TEXT[],
 
     PRIMARY KEY ("id")
@@ -341,6 +319,9 @@ CREATE UNIQUE INDEX "Evaluation.assessmentId_assessorId_unique" ON "Evaluation"(
 CREATE UNIQUE INDEX "Criteria.name_unique" ON "Criteria"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Template.title_unique" ON "Template"("title");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "HealthCheck.boardId_unique" ON "HealthCheck"("boardId");
 
 -- CreateIndex
@@ -356,10 +337,7 @@ CREATE UNIQUE INDEX "User.email_unique" ON "User"("email");
 CREATE INDEX "User.email_index" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MemberAnswer.healthCheckId_memberId_unique" ON "MemberAnswer"("healthCheckId", "memberId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "MemberComment.healthCheckId_questionId_memberId_unique" ON "MemberComment"("healthCheckId", "questionId", "memberId");
+CREATE UNIQUE INDEX "UserOnCriteria.userId_criteriaId_unique" ON "UserOnCriteria"("userId", "criteriaId");
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -371,28 +349,28 @@ ALTER TABLE "Assessment" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON D
 ALTER TABLE "Assessment" ADD FOREIGN KEY ("creatorId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Evaluation" ADD FOREIGN KEY ("assessorId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Evaluation" ADD FOREIGN KEY ("assessorId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Evaluation" ADD FOREIGN KEY ("assessmentId") REFERENCES "Assessment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Evaluation" ADD FOREIGN KEY ("assessmentId") REFERENCES "Assessment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Result" ADD FOREIGN KEY ("concerningMemberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Result" ADD FOREIGN KEY ("concerningMemberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Result" ADD FOREIGN KEY ("evaluationId") REFERENCES "Evaluation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Result" ADD FOREIGN KEY ("evaluationId") REFERENCES "Evaluation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AnswerOnCriteria" ADD FOREIGN KEY ("criteriaId") REFERENCES "Criteria"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AnswerOnCriteria" ADD FOREIGN KEY ("resultId") REFERENCES "Result"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "AnswerOnCriteria" ADD FOREIGN KEY ("resultId") REFERENCES "Result"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Template" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Template" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TemplateQuestion" ADD FOREIGN KEY ("templateId") REFERENCES "Template"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TemplateQuestion" ADD FOREIGN KEY ("templateId") REFERENCES "Template"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Board" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -404,13 +382,13 @@ ALTER TABLE "HealthCheck" ADD FOREIGN KEY ("boardId") REFERENCES "Board"("id") O
 ALTER TABLE "HealthCheck" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberOnHealthCheckOnQuestion" ADD FOREIGN KEY ("healthCheckId") REFERENCES "HealthCheck"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MemberOnHealthCheckOnQuestion" ADD FOREIGN KEY ("healthCheckId") REFERENCES "HealthCheck"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberOnHealthCheckOnQuestion" ADD FOREIGN KEY ("questionId") REFERENCES "TemplateQuestion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MemberOnHealthCheckOnQuestion" ADD FOREIGN KEY ("questionId") REFERENCES "TemplateQuestion"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberOnHealthCheckOnQuestion" ADD FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MemberOnHealthCheckOnQuestion" ADD FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Column" ADD FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -434,19 +412,10 @@ ALTER TABLE "Member" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELET
 ALTER TABLE "Member" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Notification" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserOnCriteria" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberAnswer" ADD FOREIGN KEY ("healthCheckId") REFERENCES "HealthCheck"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserOnCriteria" ADD FOREIGN KEY ("criteriaId") REFERENCES "Criteria"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "MemberAnswer" ADD FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Answer" ADD FOREIGN KEY ("memberAnswersId") REFERENCES "MemberAnswer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "MemberComment" ADD FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "MemberComment" ADD FOREIGN KEY ("healthCheckId") REFERENCES "HealthCheck"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Notification" ADD FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
