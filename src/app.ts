@@ -97,7 +97,7 @@ async function startApolloServer(typeDefs, resolvers) {
     schema,
     context: ({ req, res }) => ({ req, res }),
     formatError: (err) => {
-      const errorsList = ['403', '404', '405'];
+      const errorsList = ['400', '403', '404', '405'];
       // if(err.extensions?.code === "INTERNAL_SERVER_ERROR") {
       //   return new ApolloError(``)
       // }
@@ -107,7 +107,7 @@ async function startApolloServer(typeDefs, resolvers) {
         });
       } else if (errorsList.includes(err?.extensions?.code)) return err;
       else {
-        return new ApolloError('Something failed with server', `${StatusCodes.INTERNAL_SERVER_ERROR}`, {
+        return new ApolloError(err?.message, `${StatusCodes.INTERNAL_SERVER_ERROR}`, {
           messageDetail: err?.message,
         });
       }

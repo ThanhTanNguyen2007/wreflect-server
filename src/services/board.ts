@@ -3,7 +3,7 @@ import prisma from '../prisma';
 import error from '../errorsManagement';
 import { checkIsMemberOwningTeam } from './essential';
 
-export const getListBoardOfTeam = async (teamId: string) => {
+export const getBoards = async (teamId: string) => {
   const boards = await prisma.board.findMany({
     where: {
       teamId,

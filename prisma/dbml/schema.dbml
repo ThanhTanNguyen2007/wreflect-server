@@ -71,6 +71,8 @@ Table AnswerOnCriteria {
 Table Criteria {
   id String [pk]
   name String [unique, not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   description String [not null]
   answerOnCriteriaList AnswerOnCriteria [not null]
   UserOnCriteria UserOnCriteria [not null]
@@ -97,6 +99,7 @@ Table Template {
   id String [pk]
   title String [not null]
   isDefault Boolean [not null]
+  isBlocked Boolean [not null, default: false]
   teamId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
@@ -148,15 +151,11 @@ Table HealthCheck {
   boardId String [unique, not null]
   templateId String [not null]
   createdAt DateTime [default: `now()`, not null]
-  createdBy String [not null]
   updatedAt DateTime [not null]
-  updatedBy String
   isAnonymous Boolean [not null]
-  isCustom Boolean [not null]
-  status StatusHealthCheck [not null]
   board Board [not null]
   team Team [not null]
-  MemberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
+  memberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
 
   indexes {
     (teamId, boardId) [unique]
@@ -251,6 +250,7 @@ Table User {
   updatedAt DateTime [not null]
   isAdmin Boolean [not null, default: false]
   isSeenNotification Boolean [not null, default: false]
+  isRegistered Boolean [not null, default: true]
   userStatus UserStatus [not null, default: 'OFFLINE']
   nickname String [not null]
   picture String [not null]
@@ -265,6 +265,18 @@ Table User {
   members Member [not null]
   notifications Notification [not null]
   skillValues UserOnCriteria [not null]
+  banningUser BanningUser
+}
+
+Table BanningUser {
+  id String [pk]
+  isBannedForever Boolean [not null, default: false]
+  startBanned DateTime [default: `now()`, not null]
+  endBanned DateTime [not null]
+  title String [not null]
+  description String [not null]
+  userId String [unique, not null]
+  user User [not null]
 }
 
 Table UserOnCriteria {
@@ -400,6 +412,8 @@ Ref: Remark.authorId > Member.id
 Ref: Member.userId > User.id
 
 Ref: Member.teamId > Team.id
+
+Ref: BanningUser.userId - User.id
 
 Ref: UserOnCriteria.userId > User.id
 

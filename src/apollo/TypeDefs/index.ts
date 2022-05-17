@@ -23,7 +23,8 @@ import { default as RemiderNotification } from './remiderNotificationTypeDefs';
 import { default as UserOnCriteria } from './userOnCriteriaTypeDefs';
 import { default as Template } from './templateTypeDefs';
 import { default as TemplateQuestion } from './templateQuestionTypeDef';
-import { default as MemberOnHealthCheckOnQuestion } from './memberOnHealthCheckOnQuestion';
+import { default as MemberOnHealthCheckOnQuestion } from './memberOnHealthCheckTypeDefs';
+import { default as BanningUser } from './banningUserTypeDefs';
 
 export default [
   Answer,
@@ -52,4 +53,5 @@ export default [
   Template,
   TemplateQuestion,
   MemberOnHealthCheckOnQuestion,
+  BanningUser,
 ];

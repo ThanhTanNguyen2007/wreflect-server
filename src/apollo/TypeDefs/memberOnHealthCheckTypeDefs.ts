@@ -8,6 +8,8 @@ const typeDefs = gql`
     memberId: String
     point: Int
     comment: String
+    member: Member
+    question: TemplateQuestion
   }
 `;
 

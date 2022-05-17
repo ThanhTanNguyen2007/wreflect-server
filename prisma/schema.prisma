@@ -78,6 +78,8 @@ model AnswerOnCriteria {
 model Criteria {
   id                   String             @id @default(uuid())
   name                 String             @unique
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt()
   description          String
   answerOnCriteriaList AnswerOnCriteria[]
   UserOnCriteria       UserOnCriteria[]
@@ -94,6 +96,7 @@ model Team {
   id           String        @id @default(uuid())
   name         String
   createdAt    DateTime      @default(now())
+  createdBy     
   startDate    DateTime
   endDate      DateTime
   picture      String
@@ -111,6 +114,7 @@ model Template {
   id                   String             @id @default(uuid())
   title                String
   isDefault            Boolean
+  isBlocked            Boolean            @default(false)
   teamId               String?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt()
@@ -160,17 +164,14 @@ model HealthCheck {
   boardId             String                          @unique
   templateId          String
   createdAt           DateTime                        @default(now())
-  createdBy           String
-  updatedAt           DateTime                        @updatedAt
-  updatedBy           String?
+  updatedAt           DateTime                        @updatedAt()
+  // updatedBy           String?
   isAnonymous         Boolean
-  isCustom            Boolean
-  status              StatusHealthCheck
+  // isCustom            Boolean
+  // status              StatusHealthCheck
   board               Board                           @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   team                Team                            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
-  // memberAnswers       MemberAnswer[]
-  // memberComments      MemberComment[]
+  memberOnHealthCheck MemberOnHealthCheckOnQuestion[]
 
   @@unique([teamId, boardId])
 }
@@ -276,8 +277,6 @@ model Member {
   opinions            Opinion[]
   Remarks             Remark[]
   assessments         Assessment[]
-  // memberComments      MemberComment[]
-  // memberAnswers       MemberAnswer[]
   MemberOnHealthCheck MemberOnHealthCheckOnQuestion[]
   results             Result[]
   evaluations         Evaluation[]
@@ -334,6 +333,7 @@ model User {
   updatedAt          DateTime         @updatedAt
   isAdmin            Boolean          @default(false)
   isSeenNotification Boolean          @default(false)
+  isRegistered       Boolean          @default(true)
   userStatus         UserStatus       @default(OFFLINE)
   nickname           String           @db.VarChar(150)
   picture            String           @db.VarChar(500)
@@ -348,10 +348,20 @@ model User {
   members            Member[]
   notifications      Notification[]
   skillValues        UserOnCriteria[]
-  // fromUserCon        UserConnection[] @relation("fromUser")
-  // endUserCon         UserConnection[] @relation("endUser")
+  banningUser        BanningUser?
 
   @@index([email])
+}
+
+model BanningUser {
+  id              String   @id @default(uuid())
+  isBannedForever Boolean  @default(false)
+  startBanned     DateTime @default(now())
+  endBanned       DateTime
+  title           String
+  description     String
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
 }
 
 model UserOnCriteria {

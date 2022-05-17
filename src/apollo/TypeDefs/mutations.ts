@@ -1,4 +1,4 @@
-import { Opinion, HealthCheck } from '@prisma/client';
+import { Opinion, HealthCheck, MemberOnHealthCheckOnQuestion } from '@prisma/client';
 import { gql } from 'apollo-server-express';
 const typeDefs = gql`
   type AddMembersMutationResponse {
@@ -55,6 +55,12 @@ const typeDefs = gql`
     color: String
   }
 
+  input healthCheckAnswer {
+    questionId: String!
+    point: Int!
+    comment: String!
+  }
+
   enum PhaseType {
     DEFAULT
     PHASE
@@ -76,6 +82,10 @@ const typeDefs = gql`
     OPEN
     CLOSED
   }
+
+  # type analysisForAdmin {
+
+  # }
 
   type Mutation {
     updateMeetingNote(teamId: String!, meetingNote: String!): Member
@@ -119,8 +129,6 @@ const typeDefs = gql`
       answers: [answerInput!]!
       comments: [commentInput!]!
     ): getHealthCheck
-
-    reopenHealthCheck(teamId: String!, boardId: String!): getHealthCheck
 
     updateAction(teamId: String!, boardId: String!, columnId: String!, opinion: String!): Team
     # usingCurrentBoard(teamId: String!, boardId: String!): Team
@@ -278,8 +286,28 @@ const typeDefs = gql`
     seenNotification(notificationId: String!): Notification
     removeNotification(notificationId: String!): Notification
 
-    createTemplateHealthCheck(name: String!, questions: [questionsInput!]): Template
-    updateTemplateHealthCheck(templateId: String!, name: String!, questions: [questionsInput!]): Template
+    createTemplateHealthCheck(name: String!, questions: [questionsInput!]!): Template
+    updateTemplateHealthCheck(templateId: String!, name: String!, questions: [questionsInput!]!): Template
+    deleteTemplateHealthCheck(templateId: String!): Template
+
+    createCriteria(name: String!, description: String!): Criteria
+    updateCriteria(criteriaId: String!, name: String!, description: String!): Criteria
+    deleteCriteria(criteriaId: String!): Criteria
+    banUser(
+      userId: String!
+      title: String!
+      description: String!
+      isBannedForever: Boolean
+      startDate: String
+      endDate: String
+    ): User
+    # getAnalysisForAdmin(): analysisForAdmin
+
+    createHealthCheck(teamId: String!, boardId: String, templateId: String!, isAnonymous: Boolean!): HealthCheck
+    submitHealthCheckAnswer(teamId: String!, boardId: String!, answers: [healthCheckAnswer]!): HealthCheck
+    reopenHealthCheck(teamId: String!, boardId: String!): HealthCheck
+
+    createCustomTemplateForTeam(teamId: String!, name: String!, questions: [questionsInput!]!): Template
   }
 `;
 

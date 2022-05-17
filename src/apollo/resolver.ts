@@ -1,15 +1,12 @@
+import { getUsersArgs, banUserArgs } from './TypeDefs/userTypeDefs';
+import { getCriteriaListArgs, updateCriteriaArgs, createCriteriaArgs } from './TypeDefs/Criteria/criteriaTypeDefs';
 import _ from 'lodash';
 import {
   createAssessmentType,
   getAssessmentArgs,
-  getAssessmentListType,
+  getAssessmentsArg,
   submitDoPersonalReflection,
 } from './TypeDefs/Assessment/assessmentTypes';
-import {
-  answerHealthCheckArgs,
-  startSurveyArgs,
-  reopenHealthCheckArgs,
-} from './TypeDefs/HealthCheck/healthCheckTypeDefs';
 import { createRemarkType, removeRemarkType } from './TypeDefs/remarkTypeDefs';
 import { addMemberToTeamType, RequestWithUserInfo } from './../types';
 import {
@@ -20,12 +17,12 @@ import {
   column,
   opinion,
   remark,
-  healthCheck,
   criteria,
   assessment,
   analysis,
   notification,
   templateHealthCheck,
+  healthCheck,
 } from '../services';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -40,19 +37,26 @@ import {
 } from './TypeDefs/opinionTypeDefs';
 import { pubsub } from '../pubSub';
 import { updateBoardType, createBoardType, deleteBoardType } from './TypeDefs/Board/boardTypes';
-import { string } from 'zod';
 import {
   createTemplateHealthCheckArgs,
   updateTemplateHealthCheckArgs,
   getTemplatesArgs,
+  getTemplatesOfTeam,
+  createCustomTemplateForTeamArgs,
 } from './TypeDefs/templateTypeDefs';
+import { string } from 'zod';
+import {
+  createHealthCheckArgs,
+  reopenHealthCheckArgs,
+  submitHealthCheckAnswerArgs,
+} from './TypeDefs/HealthCheck/healthCheckTypeDefs';
 
 const resolvers = {
   Query: {
-    teams: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      const { id, isAdmin } = req?.user;
+    getTeams: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId, isAdmin } = req?.user;
       const { status, isGettingAll, search, page, size } = args;
-      const result = await team.getTeams(!!isGettingAll, page, size, search, status, isAdmin ? undefined : id);
+      const result = await team.getTeams(isAdmin, meId, isGettingAll, page, size, search, status);
       return result;
     },
     getOwnedTeams: async (_, args, { req }: { req: RequestWithUserInfo }) => {
@@ -78,20 +82,33 @@ const resolvers = {
       return myBoard;
     },
 
-    // getHealthCheck: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-    //   const result = await healthCheck.getHealthCheck(args?.teamId, args?.boardId);
-    //   return result;
-    // },
+    getHealthCheck: async (_, args: { teamId: string; boardId: string }, { req }: { req: RequestWithUserInfo }) => {
+      // const result = await healthCheck.getHealthCheck(args?.teamId, args?.boardId);
+      const { teamId, boardId } = args;
+      const gettingHealthCheck = await healthCheck.getHealthCheck(teamId, boardId);
+      return gettingHealthCheck;
+    },
 
-    getEssentialData: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      const criteriaList = await criteria.getListCriteria();
+    getEssential: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+      const isGettingAll = true;
+      const criteriaList = await criteria.getCriteriaList(isGettingAll);
       return {
-        criteriaList,
+        criteriaList: criteriaList?.data,
       };
     },
-    getAssessmentsList: async (_, args: getAssessmentListType, { req }: { req: RequestWithUserInfo }) => {
+    getAssessments: async (_, args: getAssessmentsArg, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const assessmentList = await assessment.getListAssessment(meId, args);
+      const { teamId, isGettingAll, search, sortBy, orderWith, page, size } = args;
+      const assessmentList = await assessment.getAssessments(
+        meId,
+        teamId,
+        isGettingAll,
+        search,
+        sortBy,
+        orderWith,
+        page,
+        size,
+      );
       return assessmentList;
     },
     getAssessment: async (_, args: getAssessmentArgs, { req }: { req: RequestWithUserInfo }) => {
@@ -110,9 +127,10 @@ const resolvers = {
       return assessment;
     },
 
-    getNotifications: async (_, args: { offSet: number; limit: number }, { req }: { req: RequestWithUserInfo }) => {
+    getNotifications: async (_, args: { page?: number; size?: number }, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const notificationsList = await notification?.getListNotifications(meId, args);
+      const { page, size } = args;
+      const notificationsList = await notification?.getListNotifications(meId, page, size);
       return notificationsList;
     },
 
@@ -130,8 +148,25 @@ const resolvers = {
 
     getTemplates: async (_, args: getTemplatesArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
-      const templates = await templateHealthCheck.getTemplates(args);
+      const { isGettingAll, search, page, size } = args;
+      const templates = await templateHealthCheck.getTemplates(isGettingAll, search, page, size);
       return templates;
+    },
+    getCriteriaList: async (_, args: getCriteriaListArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { isGettingAll, search, page, size } = args;
+      const criteriaList = await criteria?.getCriteriaList(isGettingAll, search, page, size);
+      return criteriaList;
+    },
+    getUsers: async (_, args: getUsersArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin } = req?.user || {};
+      const { isGettingAll, search, page, size } = args;
+      const getUsers = await user?.getUsers(isAdmin, isGettingAll, search, page, size);
+      return getUsers;
+    },
+    getTemplatesOfTeam: async (_, args: getTemplatesOfTeam, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin, id: meId } = req?.user || {};
+      const getTemplatesOfTeam = await templateHealthCheck?.getTemplatesOfTeam(args?.teamId, meId);
+      return getTemplatesOfTeam;
     },
   },
   Mutation: {
@@ -153,6 +188,27 @@ const resolvers = {
       const updatingTemplate = await templateHealthCheck?.updateTemplate(isAdmin, args);
       return updatingTemplate;
     },
+    deleteTemplateHealthCheck: async (_, args: { templateId: string }, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin } = req?.user || {};
+      const deletingTemplate = await templateHealthCheck?.deleteTemplate(isAdmin, args?.templateId);
+      return deletingTemplate;
+    },
+
+    createCriteria: async (_, args: createCriteriaArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin } = req?.user || {};
+      const creatingCriteria = await criteria.createCriteria(isAdmin, args);
+      return creatingCriteria;
+    },
+    updateCriteria: async (_, args: updateCriteriaArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin } = req?.user || {};
+      const updatingCriteria = await criteria.updateCriteria(isAdmin, args);
+      return updatingCriteria;
+    },
+    deleteCriteria: async (_, args: { criteriaId: string }, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin } = req?.user || {};
+      const deletingCriteria = await criteria?.deleteCriteria(isAdmin, args?.criteriaId);
+      return deletingCriteria;
+    },
 
     updateMeetingNote: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
@@ -173,33 +229,34 @@ const resolvers = {
       return await team.deleteTeam(req, args?.teamId);
     },
 
-    // startSurveyHealthCheck: async (_, args: startSurveyArgs, { req }: { req: RequestWithUserInfo }) => {
-    //   const { id: meId } = req?.user;
-    //   const creatingHealthCheck = await healthCheck.createHealthCheck(meId, args);
-    //   pubsub.publish('START_SURVEY', {
-    //     subOnUpdateHealthCheck: creatingHealthCheck,
-    //     teamId: args.teamId,
-    //   });
-    //   return creatingHealthCheck;
-    // },
-    // answerHealthCheck: async (_, args: answerHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
-    //   const { id: meId } = req?.user;
-    //   const setAnswerToHealthCheck = await healthCheck.setAnswerHealthCheck(meId, args);
-    //   pubsub.publish('ANSWER_HEALTH', {
-    //     updateGetHealthCheckData: setAnswerToHealthCheck,
-    //     teamId: args.teamId,
-    //   });
-    //   return setAnswerToHealthCheck;
-    // },
-    // reopenHealthCheck: async (_, args: reopenHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
-    //   const { id: meId } = req?.user;
-    //   const deletingHealthCheck = await healthCheck.reopenHealthCheck(meId, args);
-    //   pubsub.publish('REOPEN_HEALTH', {
-    //     subOnUpdateHealthCheck: deletingHealthCheck,
-    //     teamId: args.teamId,
-    //   });
-    //   return deletingHealthCheck;
-    // },
+    createHealthCheck: async (_, args: createHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const creatingHealthCheck = await healthCheck.createHealthCheck(meId, args);
+      pubsub.publish('START_SURVEY', {
+        subOnUpdateHealthCheck: creatingHealthCheck,
+        teamId: args.teamId,
+      });
+      return creatingHealthCheck;
+    },
+    submitHealthCheckAnswer: async (_, args: submitHealthCheckAnswerArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const submitingHealthCheckAnswer = await healthCheck?.submitHealthCheckAnswer(meId, args);
+      pubsub.publish('ANSWER_HEALTH', {
+        subOnUpdateHealthCheck: submitingHealthCheckAnswer,
+        teamId: args.teamId,
+      });
+      return submitingHealthCheckAnswer;
+    },
+
+    reopenHealthCheck: async (_, args: reopenHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user;
+      const deletingHealthCheck = await healthCheck.reopenHealthCheck(meId, args);
+      pubsub.publish('REOPEN_HEALTH', {
+        subOnUpdateHealthCheck: deletingHealthCheck,
+        teamId: args.teamId,
+      });
+      return deletingHealthCheck;
+    },
 
     changeTeamAccess: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
@@ -436,6 +493,22 @@ const resolvers = {
       const removingNotification = await notification?.removeNotification(meId, args);
       return removingNotification;
     },
+
+    banUser: async (_, args: banUserArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { isAdmin } = req?.user || {};
+      const banningUser = await user?.banUser(isAdmin, args);
+      return banningUser;
+    },
+
+    createCustomTemplateForTeam: async (
+      _,
+      args: createCustomTemplateForTeamArgs,
+      { req }: { req: RequestWithUserInfo },
+    ) => {
+      const { id: meId } = req?.user || {};
+      const creatingCustomTemplateForTeam = await templateHealthCheck?.createCustomForHealthCheck(meId, args);
+      return creatingCustomTemplateForTeam;
+    },
   },
   Subscription: {
     // supOnUpdateMember: {
@@ -523,7 +596,7 @@ const resolvers = {
   },
   Team: {
     boards: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      const boards = await board.getListBoardOfTeam(_.id);
+      const boards = await board.getBoards(_.id);
       return boards;
     },
     members: async (_) => {

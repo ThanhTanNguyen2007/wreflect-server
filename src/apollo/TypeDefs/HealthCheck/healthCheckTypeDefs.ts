@@ -1,5 +1,5 @@
+import { MemberOnHealthCheckOnQuestion } from '@prisma/client';
 import { gql } from 'apollo-server-express';
-import { StatusHealthCheck } from '@prisma/client';
 
 const typeDefs = gql`
   type HealthCheck {
@@ -12,21 +12,22 @@ const typeDefs = gql`
     updatedAt: String
     updatedBy: String
     isAnonymous: Boolean
-    isCustom: Boolean
-    board: Board
-    team: Team
-    memberAnswers: [MemberAnswer]
-    memberComments: [MemberComment]
+    memberOnHealthCheck: [MemberOnHealthCheckOnQuestion]
   }
 `;
 
-export type startSurveyArgs = {
+export type createHealthCheckArgs = {
   teamId: string;
   boardId: string;
   templateId: string;
   isAnonymous: boolean;
-  isCustom: boolean;
-  status: StatusHealthCheck;
+};
+
+export type submitHealthCheckAnswerArgs = {
+  teamId: string;
+  boardId: string;
+  healthCheckId: string;
+  answers: MemberOnHealthCheckOnQuestion[];
 };
 
 export type answerHealthCheckArgs = {

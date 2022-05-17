@@ -1,9 +1,10 @@
-import { checkIsMemberOfTeam } from './essential';
+import { checkIsAdmin, checkIsMemberOfTeam } from './essential';
 import { update } from 'lodash';
 import { errorName } from '../constant/errorsConstant';
 import prisma from '../prisma';
 import logger from '../logger';
 import { pubsub } from '../pubSub';
+import { banUserArgs } from '../apollo/TypeDefs/userTypeDefs';
 
 export const findOrCreateUserByEmail = async (email: string, picture: string, name, nickname: string) => {
   try {
@@ -67,44 +68,62 @@ export const findOrCreateUserByEmail = async (email: string, picture: string, na
   }
 };
 
-export const getListUsers = async (search = '', isGettingAll = false, page = 1, size = 10) => {
-  try {
-    const data = await prisma.user.findMany({
-      where: {
-        email: {
-          contains: search,
-          mode: 'insensitive',
-        },
-      },
-      ...(!isGettingAll && { skip: (page - 1) * size }),
-      ...(!isGettingAll && { take: size }),
-      include: {
-        members: true,
-      },
-      skip: (page - 1) * size,
-      take: size,
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+export const getUsers = async (isAdmin: boolean, isGettingAll = false, search = '', page = 1, size = 10) => {
+  checkIsAdmin(isAdmin);
 
-    const total = await prisma.user.count({
-      where: {
-        email: {
-          contains: search,
-          mode: 'insensitive',
+  const getUsers = await prisma.user.findMany({
+    where: {
+      OR: [
+        {
+          nickname: {
+            contains: search?.trim().toLowerCase(),
+            mode: 'insensitive',
+          },
         },
-      },
-    });
+        {
+          email: {
+            contains: search?.trim().toLowerCase(),
+            mode: 'insensitive',
+          },
+        },
+      ],
+      isRegistered: true,
+    },
+    ...(!isGettingAll && { skip: (page - 1) * size }),
+    ...(!isGettingAll && { take: size }),
+    include: {
+      banningUser: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-    return {
-      data,
-      total,
-    };
-  } catch (error) {
-    logger.error('Error in getListUsers service');
-    throw error;
-  }
+  const total = await prisma.user.count({
+    where: {
+      OR: [
+        {
+          nickname: {
+            contains: search?.trim().toLowerCase(),
+            mode: 'insensitive',
+          },
+        },
+        {
+          email: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      ],
+    },
+  });
+
+  return {
+    data: getUsers,
+    total,
+    page,
+    size,
+  };
 };
 
 export const getUser = async (userId: string) => {
@@ -195,4 +214,33 @@ export const getSkillsAnalytic = async (meId: string) => {
   );
 
   return mergedData;
+};
+
+export const banUser = async (isAdmin: boolean, args: banUserArgs) => {
+  checkIsAdmin(isAdmin);
+
+  const startDate = args?.startDate ? new Date(args?.startDate) : new Date();
+  const endDate = args?.endDate ? new Date(args?.endDate) : new Date();
+
+  const banUser = await prisma?.user?.update({
+    where: {
+      id: args?.userId,
+    },
+    data: {
+      banningUser: {
+        create: {
+          title: args?.title,
+          description: args?.description,
+          isBannedForever: args?.isBannedForever,
+          startBanned: startDate,
+          endBanned: endDate,
+        },
+      },
+    },
+    include: {
+      banningUser: true,
+    },
+  });
+
+  return banUser;
 };

@@ -10,25 +10,25 @@ export type createAssessmentType = {
   assessmentId?: string;
 };
 
-export enum filterOfGetAssessmentList {
+export enum sortAssessmentsByEnum {
   NAME,
   DATE,
   STATUS,
 }
 
-export enum sortType {
+export enum orderWithEnum {
   ASC = 'asc',
   DESC = 'desc',
 }
 
-export type getAssessmentListType = {
+export type getAssessmentsArg = {
   teamId: string;
-  orderBy: filterOfGetAssessmentList;
-  sort: sortType;
-  isGettingAll: boolean;
+  isGettingAll?: boolean;
   search?: string;
-  offSet: number;
-  limit: number;
+  sortBy?: sortAssessmentsByEnum;
+  orderWith?: orderWithEnum;
+  page?: number;
+  size?: number;
 };
 
 export type getAssessmentArgs = {

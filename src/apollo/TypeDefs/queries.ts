@@ -1,4 +1,5 @@
-import { getListCriteria } from '../../services/criteria';
+import { orderWithEnum } from './Assessment/assessmentTypes';
+import { getCriteriaList } from '../../services/criteria';
 import { gql } from 'apollo-server-express';
 const typeDefs = gql`
   type Teams {
@@ -57,7 +58,7 @@ const typeDefs = gql`
     status: inviteStatus
   }
 
-  type essentialData {
+  type getEssential {
     criteriaList: [Criteria]
   }
 
@@ -68,13 +69,34 @@ const typeDefs = gql`
     size: Int
   }
 
-  enum filterOfAssessmentList {
-    NAME
-    DATE
-    STATUS
+  type CriteriaList {
+    data: [Criteria]
+    total: Int
+    page: Int
+    size: Int
   }
 
-  enum sortType {
+  type Users {
+    data: [User]
+    total: Int
+    page: Int
+    size: Int
+  }
+
+  type Teams {
+    data: [Team]
+    total: Int
+    page: Int
+    size: Int
+  }
+
+  enum sortBy {
+    name
+    createdAt
+    status
+  }
+
+  enum orderWith {
     asc
     desc
   }
@@ -85,40 +107,46 @@ const typeDefs = gql`
   }
 
   type Query {
-    teams(status: String, isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
+    # getTeams(status: String, isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
+    getTeams(isGettingAll: Boolean, status: String, search: String, page: Int, size: Int): Teams
     getOwnedTeams(isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
     getTeamIds: [getTeamIds]
     team(teamId: String!): Team
     members(teamId: String!): [Member]
     boards(teamId: String!): [Board]
     board(boardId: String): Board
-    getAssessmentsList(
-      teamId: String!
-      isGettingAll: Boolean!
-      orderBy: filterOfAssessmentList!
-      sort: sortType!
-      search: String
-      offSet: Int!
-      limit: Int!
-    ): Assessments
 
     getAssessment(teamId: ID!, assessmentId: ID!): Assessment
 
     account: User
     inviteLink(teamId: String): inviteResponse
 
-    getHealthCheck(teamId: String, boardId: String): getHealthCheck
+    getHealthCheck(teamId: String, boardId: String): HealthCheck
 
-    getEssentialData: essentialData
+    getEssential: getEssential
 
     getAnalysisAssessment(teamId: String!, assessmentId: String!, memberId: String!): analysisAssessmentData
 
-    getNotifications(offSet: Int!, limit: Int!): [Notification]
+    getNotifications(page: Int!, size: Int!): [Notification]
 
     getNumOfUnSeenNoti: Int
 
-    # getSkillsAnalytic(notificationId): Assessment
-    getTemplates(isGettingAll: Boolean, search: String, offSet: Int, limit: Int): Templates
+    getAssessments(
+      teamId: String!
+      isGettingAll: Boolean
+      search: String
+      sortBy: sortBy
+      orderWith: orderWith
+      page: Int
+      size: Int
+    ): Assessments
+
+    getTemplates(isGettingAll: Boolean, search: String, page: Int, size: Int): Templates
+    getCriteriaList(isGettingAll: Boolean, search: String, page: Int, size: Int): CriteriaList
+    getUsers(isGettingAll: Boolean, search: String, page: Int, size: Int): Users
+    # getTeams(isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
+
+    getTemplatesOfTeam(teamId: String!): [Template]
   }
 `;
 

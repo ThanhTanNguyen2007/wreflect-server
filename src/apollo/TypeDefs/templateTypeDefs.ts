@@ -12,14 +12,27 @@ const typeDefs = gql`
   }
 `;
 
+export type getTemplatesOfTeam = {
+  teamId: string;
+};
+
 export type getTemplatesArgs = {
   isGettingAll?: boolean;
   search?: string;
-  offSet?: number;
-  limit?: number;
+  page?: number;
+  size?: number;
+};
+export type createTemplateHealthCheckArgs = {
+  name: string;
+  questions: {
+    title: string;
+    description: string;
+    color: string;
+  }[];
 };
 
-export type createTemplateHealthCheckArgs = {
+export type createCustomTemplateForTeamArgs = {
+  teamId: string;
   name: string;
   questions: {
     title: string;

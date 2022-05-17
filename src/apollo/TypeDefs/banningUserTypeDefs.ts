@@ -1,12 +1,14 @@
 import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
-  type TemplateQuestion {
-    id: String
+  type BanningUser {
+    id: ID
+    isBannedForever: Boolean
+    startBanned: String
+    endBanned: String
     title: String
-    templateId: String
-    color: String
     description: String
+    userId: String
   }
 `;
 

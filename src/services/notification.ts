@@ -2,14 +2,14 @@ import { notification } from '.';
 import logger from '../logger';
 import prisma from '../prisma';
 
-export const getListNotifications = async (meId: string, args: { offSet: number; limit: number }) => {
+export const getListNotifications = async (meId: string, page = 1, size = 10) => {
   const notificationList = await prisma?.notification?.findMany({
     where: {
       // senderId: meId,
       receiverId: meId,
     },
-    skip: args?.offSet,
-    take: args?.limit,
+    skip: (page - 1) * size,
+    take: size,
     orderBy: {
       createdAt: 'desc',
     },

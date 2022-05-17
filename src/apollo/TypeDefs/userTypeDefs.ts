@@ -25,7 +25,23 @@ const typeDefs = gql`
     members: [Member]
     notifications: [Notification]
     skillValues: [UserOnCriteria]
+    banningUser: [BanningUser]
   }
 `;
+
+export type getUsersArgs = {
+  isGettingAll?: boolean;
+  search?: string;
+  page?: number;
+  size?: number;
+};
+export type banUserArgs = {
+  userId: string;
+  title: string;
+  description: string;
+  isBannedForever?: boolean;
+  startDate?: string;
+  endDate?: string;
+};
 
 export default typeDefs;

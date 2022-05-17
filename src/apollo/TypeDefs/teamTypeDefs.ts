@@ -12,9 +12,9 @@ const typeDefs = gql`
     description: String
     status: TeamStatus
     members: [Member]
-    boards(meId: ID): [Board]
+    boards(isGettingAll: Boolean, offSet: Int, limit: Int): [Board]
     healthCheck: [HealthCheck]
-    assessments: [Assessment]
+    assessments(isGettingAll: Boolean, offSet: Int, limit: Int): [Assessment]
   }
 
   enum TeamStatus {

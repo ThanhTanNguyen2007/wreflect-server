@@ -71,6 +71,7 @@ export const addMembersToTeam = async (meId: string, args: addMemberToTeamType) 
         await prisma.user.create({
           data: {
             email: email,
+            isRegistered: false,
             members: {
               create: {
                 teamId: args.teamId,

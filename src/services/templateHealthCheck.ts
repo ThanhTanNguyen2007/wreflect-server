@@ -1,25 +1,60 @@
-import { getTemplatesArgs } from './../apollo/TypeDefs/templateTypeDefs';
+import { createCustomTemplateForTeamArgs, getTemplatesArgs } from './../apollo/TypeDefs/templateTypeDefs';
 import { createTemplateHealthCheckArgs, updateTemplateHealthCheckArgs } from '../apollo/TypeDefs/templateTypeDefs';
-import { checkIsAdmin } from './essential';
+import { checkIsAdmin, checkIsMemberOfTeam, checkIsMemberOwningTeam } from './essential';
+import error from '../errorsManagement';
 import prisma from '../prisma';
 
-export const getTemplates = async (
-  args: getTemplatesArgs = {
-    isGettingAll: false,
-    search: undefined,
-    offSet: 0,
-    limit: 10,
-  },
-) => {
+export const checkTemplateTilteIsExist = async (name: string) => {
+  const isExistTemplate = await prisma?.template?.findUnique({
+    where: {
+      title: name,
+    },
+  });
+
+  if (isExistTemplate) return error?.BadRequest('This name of template is already taked');
+};
+
+export const getTemplatesOfTeam = async (teamId, meId) => {
+  await checkIsMemberOfTeam(teamId, meId);
+
+  const gettingTemplates = await prisma?.template.findMany({
+    where: {
+      OR: [
+        {
+          isDefault: true,
+          isBlocked: false,
+        },
+        {
+          teamId,
+        },
+      ],
+    },
+    include: {
+      healthCheckQuestions: true,
+    },
+    orderBy: [
+      {
+        createdAt: 'desc',
+      },
+      {
+        isDefault: 'asc',
+      },
+    ],
+  });
+  return gettingTemplates;
+};
+
+export const getTemplates = async (isGettingAll = false, search = '', page = 1, size = 10) => {
   const templates = await prisma?.template?.findMany({
     where: {
       isDefault: true,
       title: {
-        contains: args?.search || undefined,
+        contains: search.trim().toLowerCase(),
+        mode: 'insensitive',
       },
     },
-    ...(!args?.isGettingAll && { skip: args?.offSet }),
-    ...(!args?.isGettingAll && { take: args?.limit }),
+    ...(!isGettingAll && { skip: (page - 1) * size }),
+    ...(!isGettingAll && { take: size }),
     include: {
       healthCheckQuestions: {
         include: {
@@ -36,7 +71,7 @@ export const getTemplates = async (
     where: {
       isDefault: true,
       title: {
-        contains: args?.search || undefined,
+        contains: search,
       },
     },
   });
@@ -48,7 +83,8 @@ export const getTemplates = async (
 };
 
 export const createTemplate = async (isAdmin: boolean, args: createTemplateHealthCheckArgs) => {
-  checkIsAdmin(isAdmin);
+  await checkIsAdmin(isAdmin);
+  await checkTemplateTilteIsExist(args?.name);
 
   const createHealthCheckQuestion = args?.questions?.map((question) => ({
     title: question?.title,
@@ -76,8 +112,36 @@ export const createTemplate = async (isAdmin: boolean, args: createTemplateHealt
   return creatingTemplate;
 };
 
+export const createCustomForHealthCheck = async (meId: string, args: createCustomTemplateForTeamArgs) => {
+  await checkIsMemberOwningTeam(args?.teamId, meId);
+
+  const generateQuestions = args?.questions?.map((question) => ({
+    title: question?.title,
+    description: question?.description,
+    color: question?.color,
+  }));
+
+  const creatingCustomTemplate = await prisma?.template.create({
+    data: {
+      teamId: args?.teamId,
+      title: args?.name,
+      isDefault: false,
+      isBlocked: false,
+      healthCheckQuestions: {
+        create: [...generateQuestions],
+      },
+    },
+    include: {
+      healthCheckQuestions: true,
+    },
+  });
+
+  return creatingCustomTemplate;
+};
+
 export const updateTemplate = async (isAdmin: boolean, args: updateTemplateHealthCheckArgs) => {
   checkIsAdmin(isAdmin);
+  await checkTemplateTilteIsExist(args?.name);
 
   const updateHealthCheckQuestion = args?.questions?.map((question) => ({
     title: question?.title,
@@ -109,4 +173,17 @@ export const updateTemplate = async (isAdmin: boolean, args: updateTemplateHealt
   });
 
   return updatingTemplate;
+};
+
+export const deleteTemplate = async (isAdmin: boolean, templateId: string) => {
+  await checkIsAdmin(isAdmin);
+
+  const deletingTemplate = await prisma.template.delete({
+    where: {
+      id: templateId,
+    },
+  });
+
+  if (!deletingTemplate) return error?.NotFound('Cant find template to delete');
+  return deletingTemplate;
 };

@@ -1,9 +1,9 @@
 import logger from '../logger';
 import {
-  filterOfGetAssessmentList,
+  sortAssessmentsByEnum,
   getAssessmentArgs,
-  getAssessmentListType,
-  sortType,
+  getAssessmentsArg,
+  orderWithEnum,
   createAssessmentType,
   submitDoPersonalReflection,
 } from '../apollo/TypeDefs/Assessment/assessmentTypes';
@@ -38,9 +38,9 @@ export const createAssessment = async (meId: string, args: createAssessmentType)
       status:
         moment() < moment(args?.startDate).startOf('day')
           ? 'Planned'
-          // : moment() > moment(args?.endDate).endOf('days')
-          // ? 'Complete'
-          : 'Doing',
+          : // : moment() > moment(args?.endDate).endOf('days')
+            // ? 'Complete'
+            'Doing',
       name: args?.nameAssessment,
       startDate: new Date(new Date(args?.startDate).setHours(0, 0, 0, 0)),
       endDate: new Date(new Date(args?.endDate).setHours(23, 59, 59, 999)),
@@ -110,33 +110,17 @@ export const deleteAssessment = async (meId: string, args: { teamId: string; ass
   return deletingAssessment;
 };
 
-export const getListAssessment = async (
+export const getAssessments = async (
   meId: string,
-  args: getAssessmentListType = {
-    teamId: '',
-    orderBy: filterOfGetAssessmentList.DATE,
-    sort: sortType.ASC,
-    isGettingAll: false,
-    search: undefined,
-    offSet: 8,
-    limit: 8,
-  },
+  teamId: string,
+  isGettingAll = false,
+  search = '',
+  sortBy: sortAssessmentsByEnum = sortAssessmentsByEnum.DATE,
+  orderWith: orderWithEnum = orderWithEnum.DESC,
+  page = 1,
+  size = 10,
 ) => {
-  const memberOfTeam = await checkIsMemberOfTeam(args?.teamId, meId);
-  const orderBy =
-    args?.orderBy == filterOfGetAssessmentList.NAME
-      ? {
-          name: args?.sort,
-        }
-      : args?.orderBy == filterOfGetAssessmentList.DATE
-      ? {
-          date: args?.sort,
-        }
-      : args?.orderBy == filterOfGetAssessmentList.STATUS
-      ? {
-          status: args?.sort,
-        }
-      : undefined;
+  const memberOfTeam = await checkIsMemberOfTeam(teamId, meId);
 
   const where =
     memberOfTeam?.isSuperOwner || memberOfTeam?.isOwner
@@ -151,16 +135,17 @@ export const getListAssessment = async (
 
   const assessments = await prisma.assessment.findMany({
     where: {
-      teamId: args?.teamId,
+      teamId: teamId,
       ...where,
       name: {
-        contains: args?.search || undefined,
+        contains: search,
+        mode: 'insensitive',
       },
     },
-    ...(!args?.isGettingAll && { skip: args?.offSet }),
-    ...(!args?.isGettingAll && { take: args?.limit }),
+    ...(!isGettingAll && { skip: (page - 1) * size }),
+    ...(!isGettingAll && { take: size }),
     orderBy: {
-      createdAt: 'desc',
+      [sortBy]: orderWith,
     },
     include: {
       creator: true,
@@ -184,10 +169,10 @@ export const getListAssessment = async (
 
   const total = await prisma.assessment.count({
     where: {
-      teamId: args?.teamId,
+      teamId: teamId,
       ...where,
       name: {
-        contains: args?.search || undefined,
+        contains: search || undefined,
       },
     },
   });
@@ -195,8 +180,8 @@ export const getListAssessment = async (
   return {
     data: assessments,
     total,
-    page: args?.offSet / args?.limit,
-    size: args?.limit,
+    page: page,
+    size: size,
   };
 };
 
