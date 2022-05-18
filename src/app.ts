@@ -57,7 +57,7 @@ async function startApolloServer(typeDefs, resolvers) {
   //   await updateSkillsValueOfUser()
   // })
 
-  cron.schedule('*/1 * * * *', async () => {
+  cron.schedule('0 0 */15 * *', async () => {
     await updateSkillsValueOfUser();
   });
 

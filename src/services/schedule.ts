@@ -156,6 +156,6 @@ export const updateSkillsValueOfUser = async () => {
       });
     });
   } catch (error) {
-    logger?.error('update skills value occur error ', error);
+    logger?.error('update skills value occur error ', { ...error });
   }
 };
