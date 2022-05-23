@@ -55,6 +55,13 @@ const typeDefs = gql`
     color: String
   }
 
+  input questionsWithIdInput {
+    id: String
+    title: String
+    description: String
+    color: String
+  }
+
   input healthCheckAnswer {
     questionId: String!
     point: Int!
@@ -286,9 +293,9 @@ const typeDefs = gql`
     seenNotification(notificationId: String!): Notification
     removeNotification(notificationId: String!): Notification
 
-    createTemplateHealthCheck(name: String!, questions: [questionsInput!]!): Template
-    updateTemplateHealthCheck(templateId: String!, name: String!, questions: [questionsInput!]!): Template
-    deleteTemplateHealthCheck(templateId: String!): Template
+    createTemplate(name: String!, questions: [questionsInput!]!): Template
+    updateTemplate(templateId: String!, name: String!, questions: [questionsInput!]!): Template
+    deleteTemplate(templateId: String!): Template
 
     createCriteria(name: String!, description: String!): Criteria
     updateCriteria(criteriaId: String!, name: String!, description: String!): Criteria
@@ -307,7 +314,14 @@ const typeDefs = gql`
     submitHealthCheckAnswer(teamId: String!, boardId: String!, answers: [healthCheckAnswer]!): HealthCheck
     reopenHealthCheck(teamId: String!, boardId: String!): HealthCheck
 
-    createCustomTemplateForTeam(teamId: String!, name: String!, questions: [questionsInput!]!): Template
+    createCustomTemplate(teamId: String!, name: String!, questions: [questionsInput!]!): Template
+    updateCustomTemplate(
+      teamId: String!
+      templateId: String!
+      name: String!
+      questions: [questionsWithIdInput!]!
+    ): Template
+    deleteCustomTemplate(teamId: String!, templateId: String!): Template
   }
 `;
 

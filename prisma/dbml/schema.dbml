@@ -105,10 +105,6 @@ Table Template {
   updatedAt DateTime [not null]
   team Team
   healthCheckQuestions TemplateQuestion [not null]
-
-  indexes {
-    (title) [unique]
-  }
 }
 
 Table TemplateQuestion {

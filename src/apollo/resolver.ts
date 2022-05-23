@@ -21,7 +21,7 @@ import {
   assessment,
   analysis,
   notification,
-  templateHealthCheck,
+  template,
   healthCheck,
 } from '../services';
 import { withFilter } from 'graphql-subscriptions';
@@ -42,7 +42,9 @@ import {
   updateTemplateHealthCheckArgs,
   getTemplatesArgs,
   getTemplatesOfTeam,
-  createCustomTemplateForTeamArgs,
+  createCustomTemplateArgs,
+  deleteCustomTemplateForTeamArgs,
+  updateCustomTemplateArgs,
 } from './TypeDefs/templateTypeDefs';
 import { string } from 'zod';
 import {
@@ -149,7 +151,7 @@ const resolvers = {
     getTemplates: async (_, args: getTemplatesArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
       const { isGettingAll, search, page, size } = args;
-      const templates = await templateHealthCheck.getTemplates(isGettingAll, search, page, size);
+      const templates = await template.getTemplates(isGettingAll, search, page, size);
       return templates;
     },
     getCriteriaList: async (_, args: getCriteriaListArgs, { req }: { req: RequestWithUserInfo }) => {
@@ -165,32 +167,24 @@ const resolvers = {
     },
     getTemplatesOfTeam: async (_, args: getTemplatesOfTeam, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin, id: meId } = req?.user || {};
-      const getTemplatesOfTeam = await templateHealthCheck?.getTemplatesOfTeam(args?.teamId, meId);
+      const getTemplatesOfTeam = await template?.getTemplatesOfTeam(args?.teamId, meId);
       return getTemplatesOfTeam;
     },
   },
   Mutation: {
-    createTemplateHealthCheck: async (
-      _,
-      args: createTemplateHealthCheckArgs,
-      { req }: { req: RequestWithUserInfo },
-    ) => {
+    createTemplate: async (_, args: createTemplateHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
-      const creatingTemplate = await templateHealthCheck?.createTemplate(isAdmin, args);
+      const creatingTemplate = await template?.createTemplate(isAdmin, args);
       return creatingTemplate;
     },
-    updateTemplateHealthCheck: async (
-      _,
-      args: updateTemplateHealthCheckArgs,
-      { req }: { req: RequestWithUserInfo },
-    ) => {
+    updateTemplate: async (_, args: updateTemplateHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
-      const updatingTemplate = await templateHealthCheck?.updateTemplate(isAdmin, args);
+      const updatingTemplate = await template?.updateTemplate(isAdmin, args);
       return updatingTemplate;
     },
-    deleteTemplateHealthCheck: async (_, args: { templateId: string }, { req }: { req: RequestWithUserInfo }) => {
+    deleteTemplate: async (_, args: { templateId: string }, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
-      const deletingTemplate = await templateHealthCheck?.deleteTemplate(isAdmin, args?.templateId);
+      const deletingTemplate = await template?.deleteTemplate(isAdmin, args?.templateId);
       return deletingTemplate;
     },
 
@@ -500,14 +494,20 @@ const resolvers = {
       return banningUser;
     },
 
-    createCustomTemplateForTeam: async (
-      _,
-      args: createCustomTemplateForTeamArgs,
-      { req }: { req: RequestWithUserInfo },
-    ) => {
+    createCustomTemplate: async (_, args: createCustomTemplateArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const creatingCustomTemplateForTeam = await templateHealthCheck?.createCustomForHealthCheck(meId, args);
+      const creatingCustomTemplateForTeam = await template?.createCustomTemplate(meId, args);
       return creatingCustomTemplateForTeam;
+    },
+    updateCustomTemplate: async (_, args: updateCustomTemplateArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const updatingCustomTemplate = await template?.updateCustomTemplate(meId, args);
+      return updatingCustomTemplate;
+    },
+    deleteCustomTemplate: async (_, args: deleteCustomTemplateForTeamArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const deletingCustomTemplateForTeam = await template?.deleteCustomTemplate(meId, args);
+      return deletingCustomTemplateForTeam;
     },
   },
   Subscription: {

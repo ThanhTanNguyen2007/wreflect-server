@@ -31,10 +31,22 @@ export type createTemplateHealthCheckArgs = {
   }[];
 };
 
-export type createCustomTemplateForTeamArgs = {
+export type createCustomTemplateArgs = {
   teamId: string;
   name: string;
   questions: {
+    title: string;
+    description: string;
+    color: string;
+  }[];
+};
+
+export type updateCustomTemplateArgs = {
+  teamId: string;
+  templateId: string;
+  name: string;
+  questions: {
+    id: string;
     title: string;
     description: string;
     color: string;
@@ -49,6 +61,11 @@ export type updateTemplateHealthCheckArgs = {
     description: string;
     color: string;
   }[];
+};
+
+export type deleteCustomTemplateForTeamArgs = {
+  teamId: string;
+  templateId: string;
 };
 
 export default typeDefs;

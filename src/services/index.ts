@@ -12,7 +12,7 @@ export * as criteria from './criteria';
 export * as assessment from './assessment';
 export * as analysis from './analysis';
 export * as notification from './notification';
-export * as templateHealthCheck from './templateHealthCheck';
+export * as template from './template';
 
 export * as nodeMailer from './nodemailer';
 export * as aws from './aws';
