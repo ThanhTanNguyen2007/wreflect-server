@@ -17,14 +17,13 @@ export const getTeams = async (
   size = 8,
   search = '',
   status?: TeamStatus,
-  userId?: string,
 ) => {
   const where = isAdmin
     ? undefined
     : {
         members: {
           some: {
-            userId,
+            userId: meId,
           },
         },
       };
