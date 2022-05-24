@@ -88,6 +88,11 @@ export const getTeamsOfUser = async (meId: string, isGettingAll = false, page = 
 
   const total = await prisma.team.count({
     where: {
+      members: {
+        some: {
+          userId: meId,
+        },
+      },
       name: {
         contains: search,
         mode: 'insensitive',
