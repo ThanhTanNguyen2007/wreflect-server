@@ -115,6 +115,10 @@ Table TemplateQuestion {
   healthCheckTemplate Template [not null]
   description String [not null]
   memberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
+
+  indexes {
+    (title, templateId) [unique]
+  }
 }
 
 Table Board {

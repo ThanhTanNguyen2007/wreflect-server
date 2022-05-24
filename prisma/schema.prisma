@@ -129,6 +129,8 @@ model TemplateQuestion {
   healthCheckTemplate Template                        @relation(fields: [templateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   description         String
   memberOnHealthCheck MemberOnHealthCheckOnQuestion[]
+
+  @@unique([title, templateId])
 }
 
 model Board {

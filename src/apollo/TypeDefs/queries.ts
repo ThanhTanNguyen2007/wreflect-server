@@ -109,7 +109,7 @@ const typeDefs = gql`
   type Query {
     # getTeams(status: String, isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
     getTeams(isGettingAll: Boolean, status: String, search: String, page: Int, size: Int): Teams
-    getOwnedTeams(isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
+    getTeamsOfUser(isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
     getTeamIds: [getTeamIds]
     team(teamId: String!): Team
     members(teamId: String!): [Member]

@@ -58,13 +58,13 @@ const resolvers = {
     getTeams: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId, isAdmin } = req?.user;
       const { status, isGettingAll, search, page, size } = args;
-      const result = await team.getTeams(isAdmin, meId, isGettingAll, page, size, search, status);
+      const result = await team.getTeams(isAdmin, isGettingAll, page, size, search, status);
       return result;
     },
-    getOwnedTeams: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+    getTeamsOfUser: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user;
       const { isGettingAll, search, page, size } = args;
-      const ownedTeams = await team.getMyTeams(!!isGettingAll, page, size, search, meId);
+      const ownedTeams = await team.getTeamsOfUser(meId, !!isGettingAll, page, size, search);
       return ownedTeams;
     },
     team: async (_, args, { req }: { req: RequestWithUserInfo }) => {

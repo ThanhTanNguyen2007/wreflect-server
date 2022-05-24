@@ -49,7 +49,6 @@ export const createAssessment = async (meId: string, args: createAssessmentType)
       },
     },
     include: {
-      team: true,
       evaluations: true,
     },
   });
@@ -65,12 +64,18 @@ export const createAssessment = async (meId: string, args: createAssessmentType)
     },
   });
 
+  const team = await prisma?.team?.findUnique({
+    where: {
+      id: args?.teamId,
+    },
+  });
+
   const creatingRemiderNoti = await prisma.remiderNotification?.create({
     data: {
       sentBy: meId,
       sendTo: [...userIdList?.map((x) => x?.userId)],
       dateSent: new Date(assessment?.startDate?.setHours(0, 0, 0, 0)),
-      title: `${assessment?.name} of ${assessment?.team?.name} is starting now`,
+      title: `${assessment?.name} of ${team?.name} is starting now`,
       description: `${moment(assessment?.startDate).format('DD/MM/YYYY')}`,
     },
   });
