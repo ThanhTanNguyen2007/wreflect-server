@@ -91,11 +91,11 @@ Table Team {
   members Member [not null]
   boards Board [not null]
   healthChecks HealthCheck [not null]
-  teamTemplate Template [not null]
+  teamTemplate HealthCheckTemplate [not null]
   assessments Assessment [not null]
 }
 
-Table Template {
+Table HealthCheckTemplate {
   id String [pk]
   title String [not null]
   isDefault Boolean [not null]
@@ -105,6 +105,10 @@ Table Template {
   updatedAt DateTime [not null]
   team Team
   healthCheckQuestions TemplateQuestion [not null]
+
+  indexes {
+    (title) [unique]
+  }
 }
 
 Table TemplateQuestion {
@@ -112,7 +116,7 @@ Table TemplateQuestion {
   title String [not null]
   templateId String [not null]
   color String [not null]
-  healthCheckTemplate Template [not null]
+  healthCheckTemplate HealthCheckTemplate [not null]
   description String [not null]
   memberOnHealthCheck MemberOnHealthCheckOnQuestion [not null]
 
@@ -134,7 +138,6 @@ Table Board {
   isAnonymous Boolean [not null, default: false]
   votesLimit Int [not null, default: 25]
   meetingNote String [not null, default: 'My meeting note...']
-  currentColumnId String
   title String [not null]
   timerInProgress Boolean [not null, default: false]
   type BoardType [not null, default: 'PHASE']
@@ -383,9 +386,9 @@ Ref: AnswerOnCriteria.criteriaId > Criteria.id
 
 Ref: AnswerOnCriteria.resultId > Result.id
 
-Ref: Template.teamId > Team.id
+Ref: HealthCheckTemplate.teamId > Team.id
 
-Ref: TemplateQuestion.templateId > Template.id
+Ref: TemplateQuestion.templateId > HealthCheckTemplate.id
 
 Ref: Board.teamId > Team.id
 

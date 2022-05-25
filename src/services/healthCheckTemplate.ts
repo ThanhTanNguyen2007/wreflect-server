@@ -13,7 +13,7 @@ import errorsManagement from '../errorsManagement';
 export const getTemplatesOfTeam = async (teamId, meId) => {
   await checkIsMemberOfTeam(teamId, meId);
 
-  const gettingTemplates = await prisma?.template.findMany({
+  const gettingTemplates = await prisma?.healthCheckTemplate.findMany({
     where: {
       OR: [
         {
@@ -30,10 +30,10 @@ export const getTemplatesOfTeam = async (teamId, meId) => {
     },
     orderBy: [
       {
-        createdAt: 'desc',
+        isDefault: 'asc',
       },
       {
-        isDefault: 'asc',
+        createdAt: 'desc',
       },
     ],
   });
@@ -41,7 +41,7 @@ export const getTemplatesOfTeam = async (teamId, meId) => {
 };
 
 export const getTemplates = async (isGettingAll = false, search = '', page = 1, size = 10) => {
-  const templates = await prisma?.template?.findMany({
+  const templates = await prisma?.healthCheckTemplate?.findMany({
     where: {
       isDefault: true,
       title: {
@@ -63,7 +63,7 @@ export const getTemplates = async (isGettingAll = false, search = '', page = 1, 
     },
   });
 
-  const total = await prisma.template.count({
+  const total = await prisma.healthCheckTemplate.count({
     where: {
       isDefault: true,
       title: {
@@ -87,7 +87,7 @@ export const createTemplate = async (isAdmin: boolean, args: createTemplateHealt
     color: question?.color,
   }));
 
-  const creatingTemplate = await prisma?.template?.create({
+  const creatingTemplate = await prisma.healthCheckTemplate?.create({
     data: {
       title: args?.name,
       isDefault: true,
@@ -116,7 +116,7 @@ export const createCustomTemplate = async (meId: string, args: createCustomTempl
     color: question?.color,
   }));
 
-  const creatingCustomTemplate = await prisma?.template.create({
+  const creatingCustomTemplate = await prisma.healthCheckTemplate.create({
     data: {
       teamId: args?.teamId,
       title: args?.name,
@@ -192,7 +192,7 @@ export const updateTemplate = async (isAdmin: boolean, args: updateTemplateHealt
     color: question?.color,
   }));
 
-  const updatingTemplate = await prisma?.template?.update({
+  const updatingTemplate = await prisma.healthCheckTemplate?.update({
     where: {
       id: args?.templateId,
     },
@@ -220,7 +220,7 @@ export const updateTemplate = async (isAdmin: boolean, args: updateTemplateHealt
 export const deleteTemplate = async (isAdmin: boolean, templateId: string) => {
   await checkIsAdmin(isAdmin);
 
-  const deletingTemplate = await prisma.template.delete({
+  const deletingTemplate = await prisma.healthCheckTemplate.delete({
     where: {
       id: templateId,
     },

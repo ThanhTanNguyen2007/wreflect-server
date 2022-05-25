@@ -88,7 +88,7 @@ const templatesData = [
       description: question?.description,
       color: question?.color,
     }));
-    const creatingTemplateHealthCheck = await prisma?.template?.create({
+    const creatingTemplateHealthCheck = await prisma?.healthCheckTemplate?.create({
       data: {
         title: templatesData[0].title,
         isDefault: true,

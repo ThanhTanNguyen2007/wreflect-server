@@ -113,7 +113,7 @@ CREATE TABLE "Team" (
 );
 
 -- CreateTable
-CREATE TABLE "Template" (
+CREATE TABLE "HealthCheckTemplate" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "isDefault" BOOLEAN NOT NULL,
@@ -156,6 +156,7 @@ CREATE TABLE "Board" (
     "type" "BoardType" NOT NULL DEFAULT E'PHASE',
     "currentPhase" "PhaseType" NOT NULL DEFAULT E'REFLECT',
     "endTime" TIMESTAMP(3),
+    "boardTemplateId" TEXT NOT NULL,
 
     PRIMARY KEY ("id")
 );
@@ -191,6 +192,7 @@ CREATE TABLE "Column" (
     "boardId" TEXT NOT NULL,
     "color" TEXT NOT NULL DEFAULT E'white',
     "title" TEXT NOT NULL,
+    "columnTemplateId" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "position" INTEGER NOT NULL,
 
@@ -332,7 +334,10 @@ CREATE UNIQUE INDEX "Evaluation.assessmentId_assessorId_unique" ON "Evaluation"(
 CREATE UNIQUE INDEX "Criteria.name_unique" ON "Criteria"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Template.title_unique" ON "Template"("title");
+CREATE UNIQUE INDEX "HealthCheckTemplate.title_unique" ON "HealthCheckTemplate"("title");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TemplateQuestion.title_templateId_unique" ON "TemplateQuestion"("title", "templateId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "HealthCheck.boardId_unique" ON "HealthCheck"("boardId");
@@ -383,10 +388,10 @@ ALTER TABLE "AnswerOnCriteria" ADD FOREIGN KEY ("criteriaId") REFERENCES "Criter
 ALTER TABLE "AnswerOnCriteria" ADD FOREIGN KEY ("resultId") REFERENCES "Result"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Template" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "HealthCheckTemplate" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TemplateQuestion" ADD FOREIGN KEY ("templateId") REFERENCES "Template"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TemplateQuestion" ADD FOREIGN KEY ("templateId") REFERENCES "HealthCheckTemplate"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Board" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;

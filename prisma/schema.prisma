@@ -93,23 +93,23 @@ enum AssessmentStatus {
 }
 
 model Team {
-  id           String        @id @default(uuid())
+  id           String                @id @default(uuid())
   name         String
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime              @default(now())
   startDate    DateTime
   endDate      DateTime
   picture      String
-  isPublic     Boolean       @default(true)
+  isPublic     Boolean               @default(true)
   description  String?
-  status       TeamStatus    @default(DOING)
+  status       TeamStatus            @default(DOING)
   members      Member[]
   boards       Board[]
   healthChecks HealthCheck[]
-  teamTemplate Template[]
+  teamTemplate HealthCheckTemplate[]
   assessments  Assessment[]
 }
 
-model Template {
+model HealthCheckTemplate {
   id                   String             @id @default(uuid())
   title                String
   isDefault            Boolean
@@ -119,6 +119,8 @@ model Template {
   updatedAt            DateTime           @updatedAt()
   team                 Team?              @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   healthCheckQuestions TemplateQuestion[]
+
+  @@unique([title])
 }
 
 model TemplateQuestion {
@@ -126,7 +128,7 @@ model TemplateQuestion {
   title               String
   templateId          String
   color               String
-  healthCheckTemplate Template                        @relation(fields: [templateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  healthCheckTemplate HealthCheckTemplate             @relation(fields: [templateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   description         String
   memberOnHealthCheck MemberOnHealthCheckOnQuestion[]
 
@@ -146,7 +148,6 @@ model Board {
   isAnonymous     Boolean      @default(false)
   votesLimit      Int          @default(25)
   meetingNote     String       @default("My meeting note...")
-  currentColumnId String?
   title           String
   timerInProgress Boolean      @default(false)
   type            BoardType    @default(PHASE)
@@ -164,10 +165,7 @@ model HealthCheck {
   templateId          String
   createdAt           DateTime                        @default(now())
   updatedAt           DateTime                        @updatedAt()
-  // updatedBy           String?
   isAnonymous         Boolean
-  // isCustom            Boolean
-  // status              StatusHealthCheck
   board               Board                           @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   team                Team                            @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   memberOnHealthCheck MemberOnHealthCheckOnQuestion[]
@@ -288,43 +286,6 @@ enum UserConnectionStatus {
   Sending
 }
 
-// model MemberAnswer {
-//   id            String      @id @default(uuid())
-//   templateId    String
-//   healthCheckId String
-//   createdAt     DateTime    @default(now())
-//   updatedAt     DateTime    @updatedAt
-//   memberId      String
-//   answers       Answer[]
-//   healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-//   @@unique([healthCheckId, memberId])
-// }
-
-// model Answer {
-//   id              String        @id @default(uuid())
-//   questionId      String
-//   value           String
-//   memberAnswersId String?
-//   memberAnswer    MemberAnswer? @relation(fields: [memberAnswersId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-// }
-
-// model MemberComment {
-//   id            String      @id @default(uuid())
-//   templateId    String
-//   healthCheckId String
-//   createdAt     DateTime    @default(now())
-//   updatedAt     DateTime    @updatedAt
-//   memberId      String
-//   questionId    String
-//   text          String
-//   member        Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   healthCheck   HealthCheck @relation(fields: [healthCheckId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-//   @@unique([healthCheckId, questionId, memberId])
-// }
-
 model User {
   id                 String           @id @default(uuid())
   email              String           @unique
@@ -373,17 +334,6 @@ model UserOnCriteria {
 
   @@unique([userId, criteriaId])
 }
-
-// model UserConnection {
-//   id           String               @id @default(uuid())
-//   fromUserId   String
-//   toUserId     String
-//   sentTime     DateTime             @default(now())
-//   responseTime DateTime
-//   status       UserConnectionStatus
-//   fromUser     User                 @relation("fromUser", fields: [fromUserId], references: [id])
-//   endUser      User                 @relation("endUser", fields: [toUserId], references: [id])
-// }
 
 model Notification {
   id           String   @id @default(uuid())

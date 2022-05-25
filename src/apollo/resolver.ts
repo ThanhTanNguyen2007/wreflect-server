@@ -21,8 +21,8 @@ import {
   assessment,
   analysis,
   notification,
-  template,
   healthCheck,
+  healthCheckTemplate,
 } from '../services';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -43,8 +43,8 @@ import {
   getTemplatesArgs,
   getTemplatesOfTeam,
   createCustomTemplateArgs,
-  deleteCustomTemplateForTeamArgs,
   updateCustomTemplateArgs,
+  deleteCustomTemplateForTeamArgs,
 } from './TypeDefs/templateTypeDefs';
 import { string } from 'zod';
 import {
@@ -151,7 +151,7 @@ const resolvers = {
     getTemplates: async (_, args: getTemplatesArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
       const { isGettingAll, search, page, size } = args;
-      const templates = await template.getTemplates(isGettingAll, search, page, size);
+      const templates = await healthCheckTemplate.getTemplates(isGettingAll, search, page, size);
       return templates;
     },
     getCriteriaList: async (_, args: getCriteriaListArgs, { req }: { req: RequestWithUserInfo }) => {
@@ -167,24 +167,32 @@ const resolvers = {
     },
     getTemplatesOfTeam: async (_, args: getTemplatesOfTeam, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin, id: meId } = req?.user || {};
-      const getTemplatesOfTeam = await template?.getTemplatesOfTeam(args?.teamId, meId);
+      const getTemplatesOfTeam = await healthCheckTemplate?.getTemplatesOfTeam(args?.teamId, meId);
       return getTemplatesOfTeam;
     },
   },
   Mutation: {
-    createTemplate: async (_, args: createTemplateHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
+    createHealthCheckTemplate: async (
+      _,
+      args: createTemplateHealthCheckArgs,
+      { req }: { req: RequestWithUserInfo },
+    ) => {
       const { isAdmin } = req?.user || {};
-      const creatingTemplate = await template?.createTemplate(isAdmin, args);
+      const creatingTemplate = await healthCheckTemplate?.createTemplate(isAdmin, args);
       return creatingTemplate;
     },
-    updateTemplate: async (_, args: updateTemplateHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
+    updateHealthCheckTemplate: async (
+      _,
+      args: updateTemplateHealthCheckArgs,
+      { req }: { req: RequestWithUserInfo },
+    ) => {
       const { isAdmin } = req?.user || {};
-      const updatingTemplate = await template?.updateTemplate(isAdmin, args);
+      const updatingTemplate = await healthCheckTemplate?.updateTemplate(isAdmin, args);
       return updatingTemplate;
     },
-    deleteTemplate: async (_, args: { templateId: string }, { req }: { req: RequestWithUserInfo }) => {
+    deleteHealthCheckTemplate: async (_, args: { templateId: string }, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
-      const deletingTemplate = await template?.deleteTemplate(isAdmin, args?.templateId);
+      const deletingTemplate = await healthCheckTemplate?.deleteTemplate(isAdmin, args?.templateId);
       return deletingTemplate;
     },
 
@@ -496,17 +504,17 @@ const resolvers = {
 
     createCustomTemplate: async (_, args: createCustomTemplateArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const creatingCustomTemplateForTeam = await template?.createCustomTemplate(meId, args);
+      const creatingCustomTemplateForTeam = await healthCheckTemplate?.createCustomTemplate(meId, args);
       return creatingCustomTemplateForTeam;
     },
     updateCustomTemplate: async (_, args: updateCustomTemplateArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const updatingCustomTemplate = await template?.updateCustomTemplate(meId, args);
+      const updatingCustomTemplate = await healthCheckTemplate?.updateCustomTemplate(meId, args);
       return updatingCustomTemplate;
     },
     deleteCustomTemplate: async (_, args: deleteCustomTemplateForTeamArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const deletingCustomTemplateForTeam = await template?.deleteCustomTemplate(meId, args);
+      const deletingCustomTemplateForTeam = await healthCheckTemplate?.deleteCustomTemplate(meId, args);
       return deletingCustomTemplateForTeam;
     },
   },
