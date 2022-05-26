@@ -324,6 +324,8 @@ const typeDefs = gql`
       endDate: String
     ): User
     # getAnalysisForAdmin(): analysisForAdmin
+
+    joinTeamWithLink(teamId: String!): Team
   }
 `;
 

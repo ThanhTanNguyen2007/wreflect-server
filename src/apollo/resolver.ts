@@ -69,7 +69,7 @@ const resolvers = {
     },
     team: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const { id, isAdmin } = req?.user;
-      const myTeam = await team.getTeam(args.teamId, isAdmin ? undefined : id);
+      const myTeam = await team.getTeam(id, isAdmin, args.teamId);
       return myTeam;
     },
     account: async (_, args, { req }: { req: RequestWithUserInfo }) => {
@@ -320,6 +320,12 @@ const resolvers = {
       });
 
       return emptingColumn;
+    },
+
+    joinTeamWithLink: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user;
+      const joiningTeam = await team?.joinTeamWithLink(meId, args?.teamId);
+      return joiningTeam;
     },
 
     addMembers: async (_, args: addMemberToTeamType, { req }: { req: RequestWithUserInfo }) => {
@@ -602,20 +608,20 @@ const resolvers = {
       return members;
     },
   },
-  Team: {
-    boards: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      const boards = await board.getBoards(_.id);
-      return boards;
-    },
-    members: async (_) => {
-      const members = await member.getListMembers(_.id);
-      return members;
-    },
-    // assessments: async (currentValue, args: getAssessmentListType, test) => {
-    //   const assessments = await assessment.getListAssessment(currentValue.id, _.isEmpty(args) ? undefined : args);
-    //   return assessments;
-    // },
-  },
+  // Team: {
+  // boards: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+  //   const boards = await board.getBoards(_.id);
+  //   return boards;
+  // },
+  // members: async (_) => {
+  //   const members = await member.getListMembers(_.id);
+  //   return members;
+  // },
+  // assessments: async (currentValue, args: getAssessmentListType, test) => {
+  //   const assessments = await assessment.getListAssessment(currentValue.id, _.isEmpty(args) ? undefined : args);
+  //   return assessments;
+  // },
+  // },
   // Assessment: {
   //   assessmentOnCriteriaList:  async (_) => {
   //     const assessmentOnCriteriaList = await assessment.
@@ -628,11 +634,11 @@ const resolvers = {
   //   },
   // },
   Board: {
-    team: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      const { id: meId, isAdmin } = req?.user || {};
-      const myTeam = await team.getTeam(_.teamId, req ? (isAdmin ? undefined : meId) : args.meId);
-      return myTeam;
-    },
+    // team: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+    //   const { id: meId, isAdmin } = req?.user || {};
+    //   const myTeam = await team.getTeam(_.teamId, req ? (isAdmin ? undefined : meId) : args.meId);
+    //   return myTeam;
+    // },
     columns: async (_) => {
       const columns = await column.getListColumns(_.id);
       return columns;
@@ -675,10 +681,10 @@ const resolvers = {
     user: async (_) => {
       return await user.getUser(_.userId);
     },
-    team: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      const { id, isAdmin } = req?.user;
-      return await team.getTeam(_.teamId, isAdmin ? undefined : id);
-    },
+    // team: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+    //   const { id, isAdmin } = req?.user;
+    //   return await team.getTeam(_.teamId, isAdmin ? undefined : id);
+    // },
   },
 };
 

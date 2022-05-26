@@ -1,3 +1,4 @@
+import { getListDataType } from './../types';
 import { StatusCodes } from 'http-status-codes';
 import config from '../config';
 import prisma from './../prisma';
@@ -8,6 +9,7 @@ import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import { checkIsMemberOfTeam, checkIsMemberOwningTeam, allowUpdatingOpinion, checkIsAdmin } from './essential';
 import error from '../errorsManagement';
 import { updateActionTrackerType } from '../apollo/TypeDefs/opinionTypeDefs';
+import errorsManagement from '../errorsManagement';
 
 export const getTeams = async (
   isAdmin: boolean,
@@ -39,8 +41,37 @@ export const getTeams = async (
       createdAt: 'desc',
     },
     include: {
-      boards: true,
-      members: true,
+      members: {
+        include: {
+          user: true,
+        },
+      },
+      boards: {
+        include: {
+          columns: {
+            include: {
+              opinions: {
+                include: {
+                  remarks: {
+                    include: {
+                      author: {
+                        include: {
+                          user: true,
+                        },
+                      },
+                    },
+                  },
+                  author: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -84,6 +115,39 @@ export const getTeamsOfUser = async (meId: string, isGettingAll = false, page = 
     ...(!isGettingAll && { skip: (page - 1) * size }),
     ...(!isGettingAll && { take: size }),
     orderBy: { createdAt: 'desc' },
+    include: {
+      members: {
+        include: {
+          user: true,
+        },
+      },
+      boards: {
+        include: {
+          columns: {
+            include: {
+              opinions: {
+                include: {
+                  remarks: {
+                    include: {
+                      author: {
+                        include: {
+                          user: true,
+                        },
+                      },
+                    },
+                  },
+                  author: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   const total = await prisma.team.count({
@@ -108,24 +172,38 @@ export const getTeamsOfUser = async (meId: string, isGettingAll = false, page = 
   };
 };
 
-export const getTeam = async (teamId: string, userId?: string) => {
-  const where = userId
+export const getTeam = async (meId: string, isAdmin: boolean, teamId: string) => {
+  // const memberOfTeam = await checkIsMemberOfTeam(teamId, meId);
+  // const member = await prisma.member.findUnique({
+  //   where: {
+  //     userId_teamId: {
+  //       userId: meId,
+  //       teamId,
+  //     },
+  //   },
+  //   include: {
+  //     user: true,
+  //     team: true,
+  //   },
+  // });
+
+  const where = !isAdmin
     ? {
         OR: [
           {
             isPublic: true,
           },
-          {
-            boards: {
-              some: {
-                isPublic: true,
-              },
-            },
-          },
+          // {
+          //   boards: {
+          //     some: {
+          //       isPublic: true,
+          //     },
+          //   },
+          // },
           {
             members: {
               some: {
-                userId,
+                userId: meId,
               },
             },
           },
@@ -137,6 +215,39 @@ export const getTeam = async (teamId: string, userId?: string) => {
     where: {
       id: teamId,
       ...where,
+    },
+    include: {
+      members: {
+        include: {
+          user: true,
+        },
+      },
+      boards: {
+        include: {
+          columns: {
+            include: {
+              opinions: {
+                include: {
+                  remarks: {
+                    include: {
+                      author: {
+                        include: {
+                          user: true,
+                        },
+                      },
+                    },
+                  },
+                  author: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
   if (!team) return error.NotFound();
@@ -342,6 +453,66 @@ export const updateActionTracker = async (meId: string, args: updateActionTracke
 
   if (!team) return error?.NotFound();
   return team;
+};
+
+export const joinTeamWithLink = async (meId: string, teamId: string) => {
+  const memberOfTeam = await prisma.member.findUnique({
+    where: {
+      userId_teamId: {
+        userId: meId,
+        teamId,
+      },
+    },
+    include: {
+      user: true,
+      team: true,
+    },
+  });
+  if (memberOfTeam && !memberOfTeam?.isPendingInvitation) return errorsManagement?.BadRequest();
+  //avoid member already joined team
+
+  const updatingTeam = memberOfTeam?.isPendingInvitation
+    ? {
+        update: {
+          where: { id: 'fdsf' },
+          data: {
+            isPendingInvitation: true,
+          },
+        },
+      }
+    : {
+        create: {
+          userId: meId,
+        },
+      };
+
+  const condition = memberOfTeam?.isPendingInvitation ? undefined : { isPublic: true };
+
+  const team = await prisma?.team?.findFirst({
+    where: {
+      id: teamId,
+      ...condition,
+    },
+  });
+
+  if (!team) return errorsManagement?.Forbidden('Team not found or not public to join');
+
+  const newTeam = await prisma?.team?.update({
+    where: {
+      id: teamId,
+    },
+    data: {
+      members: {
+        ...updatingTeam,
+      },
+    },
+    include: {
+      boards: true,
+      members: true,
+    },
+  });
+
+  return newTeam;
 };
 
 // export const createBoard = async (req: RequestWithUserInfo, teamId: string) => {

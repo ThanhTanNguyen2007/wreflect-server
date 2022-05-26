@@ -64,7 +64,7 @@ export const addMembersToTeam = async (meId: string, args: addMemberToTeamType) 
         sendMail(
           email,
           `Invite to team ${args.teamId}`,
-          `Someone invite you to team ${memberOwnedTeam?.team.name} - ${args.teamId}`,
+          `${memberOwnedTeam?.user?.nickname} invite you to team ${memberOwnedTeam?.team.name} - ${args.teamId}: ${config?.CLIENT_URL}/invite-link/${args?.teamId}`,
         );
         warnings.push(`We have sent email invite to ${email}`);
 
@@ -91,6 +91,7 @@ export const addMembersToTeam = async (meId: string, args: addMemberToTeamType) 
 
   if (currentUsers.length > 0) {
     for (let idx = 0; idx < currentUsers.length; idx++) {
+      const email = currentMailsUser[idx];
       try {
         const member = await prisma.member.findUnique({
           where: {
@@ -110,6 +111,12 @@ export const addMembersToTeam = async (meId: string, args: addMemberToTeamType) 
               teamId: args?.teamId,
             },
           });
+          sendMail(
+            email,
+            `Invite to team ${args.teamId}`,
+            `${memberOwnedTeam?.user?.nickname} invite you to team ${memberOwnedTeam?.team.name} - ${args.teamId}: ${config?.CLIENT_URL}/invite-link/${args?.teamId}`,
+          );
+
           success.push(`${currentUsers[idx]?.email} added in this team`);
         }
       } catch (error) {
