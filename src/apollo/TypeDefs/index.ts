@@ -25,6 +25,7 @@ import { default as Template } from './templateTypeDefs';
 import { default as TemplateQuestion } from './templateQuestionTypeDef';
 import { default as MemberOnHealthCheckOnQuestion } from './memberOnHealthCheckTypeDefs';
 import { default as BanningUser } from './banningUserTypeDefs';
+import { default as Session } from './sessionTypeDefs';
 
 export default [
   Answer,
@@ -54,4 +55,5 @@ export default [
   TemplateQuestion,
   MemberOnHealthCheckOnQuestion,
   BanningUser,
+  Session,
 ];

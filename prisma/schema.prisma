@@ -266,7 +266,6 @@ model Member {
   isSuperOwner        Boolean                         @default(false)
   isPendingInvitation Boolean                         @default(false)
   isGuess             Boolean                         @default(false)
-  meetingNote         String?
   invitedBy           String?
   joinedAt            DateTime                        @default(now())
   user                User                            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -298,6 +297,7 @@ model User {
   nickname           String           @db.VarChar(150)
   picture            String           @db.VarChar(500)
   gender             Gender           @default(UNSPECIFIED)
+  sub                String
   workplace          String?          @db.VarChar(300)
   address            String?          @db.VarChar(300)
   school             String?          @db.VarChar(300)
@@ -321,7 +321,7 @@ model BanningUser {
   title           String
   description     String
   userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model UserOnCriteria {

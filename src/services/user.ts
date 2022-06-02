@@ -1,3 +1,4 @@
+import { updateUserArgs } from './../apollo/TypeDefs/userTypeDefs';
 import { checkIsAdmin, checkIsMemberOfTeam } from './essential';
 import { update } from 'lodash';
 import { errorName } from '../constant/errorsConstant';
@@ -5,8 +6,16 @@ import prisma from '../prisma';
 import logger from '../logger';
 import { pubsub } from '../pubSub';
 import { banUserArgs } from '../apollo/TypeDefs/userTypeDefs';
+import { P } from 'pino';
 
-export const findOrCreateUserByEmail = async (email: string, picture: string, name, nickname: string) => {
+export const findOrCreateUserByEmail = async (
+  email: string,
+  picture: string,
+  userId: string,
+  name: string,
+  nickname: string,
+  sub: string,
+) => {
   try {
     const findUser = await prisma.user.findUnique({
       where: {
@@ -22,8 +31,7 @@ export const findOrCreateUserByEmail = async (email: string, picture: string, na
     const updateData =
       findUser && findUser.nickname === 'UnRegistered' && findUser.members[0].isPendingInvitation
         ? {
-            nickname,
-            picture,
+            sub,
             members: {
               updateMany: {
                 where: {
@@ -46,6 +54,7 @@ export const findOrCreateUserByEmail = async (email: string, picture: string, na
       },
       create: {
         email,
+        sub,
         userStatus: 'ONLINE',
         picture,
         nickname,
@@ -93,6 +102,7 @@ export const getUsers = async (isAdmin: boolean, isGettingAll = false, search = 
     ...(!isGettingAll && { take: size }),
     include: {
       banningUser: true,
+      sessions: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -126,47 +136,23 @@ export const getUsers = async (isAdmin: boolean, isGettingAll = false, search = 
   };
 };
 
-export const getUser = async (userId: string) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      include: {
-        notifications: true,
-        skillValues: {
-          include: {
-            criteria: true,
-          },
+export const getUser = async (meId: string, userId?: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId ? userId : meId,
+    },
+    include: {
+      notifications: true,
+      skillValues: {
+        include: {
+          criteria: true,
         },
       },
-    });
+      sessions: true,
+    },
+  });
 
-    return user;
-  } catch (error) {
-    logger.error('Error in getUserById service');
-    throw error;
-  }
-};
-
-export const updateUser = async (userId: string, args: any) => {
-  try {
-    const user = await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        picture: args?.picture,
-      },
-    });
-
-    if (!user) throw new Error(errorName.FORBIDDEN);
-
-    return user;
-  } catch (error) {
-    logger.error('Error in updateUser service');
-    throw error;
-  }
+  return user;
 };
 
 type cachedSkillsValue = {
@@ -243,4 +229,29 @@ export const banUser = async (isAdmin: boolean, args: banUserArgs) => {
   });
 
   return banUser;
+};
+
+export const updateUser = async (meId: string, args: updateUserArgs) => {
+  const updatingUser = await prisma?.user?.update({
+    where: {
+      id: meId,
+    },
+    data: {
+      nickname: args?.nickname,
+      picture: args?.picture,
+      gender: args?.gender,
+      workplace: args?.workplace,
+      address: args?.address,
+      school: args?.school,
+      introduction: args?.introduction,
+      talents: args?.talents,
+      interests: args?.interests,
+    },
+    include: {
+      sessions: true,
+      notifications: true,
+    },
+  });
+
+  return updatingUser;
 };

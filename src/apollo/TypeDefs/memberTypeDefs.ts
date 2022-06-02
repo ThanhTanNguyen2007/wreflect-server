@@ -9,7 +9,6 @@ const typeDefs = gql`
     isSuperOwner: Boolean!
     isPendingInvitation: Boolean!
     isGuess: Boolean!
-    meetingNote: String
     invitedBy: String
     joinedAt: String!
     user: User

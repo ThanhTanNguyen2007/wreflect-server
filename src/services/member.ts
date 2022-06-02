@@ -72,6 +72,7 @@ export const addMembersToTeam = async (meId: string, args: addMemberToTeamType) 
           data: {
             email: email,
             isRegistered: false,
+            sub: 'temp',
             members: {
               create: {
                 teamId: args.teamId,
@@ -200,20 +201,4 @@ export const changeRoleMember = async (meId: string, args: setRoleMemberType) =>
 
   if (!team) return error.NotFound("Can't found a member to change role ");
   return team;
-};
-
-export const updateMeetingNote = async (meId: string, teamId: string, meetingNote: string) => {
-  const member = await prisma.member.update({
-    where: {
-      userId_teamId: {
-        userId: meId,
-        teamId,
-      },
-    },
-    data: {
-      meetingNote,
-    },
-  });
-
-  return member;
 };

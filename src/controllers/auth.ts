@@ -14,6 +14,7 @@ export const login = async (req: Request, res: Response): Promise<void | Respons
     const { body } = validators.login(req);
     const {
       email,
+      userId,
       email_verified: isEmailVerified,
       name,
       nickname,
@@ -23,7 +24,7 @@ export const login = async (req: Request, res: Response): Promise<void | Respons
     if (!isEmailVerified) {
       return res.send({ email, requiresEmailVerification: !isEmailVerified, picture, sub });
     }
-    const user = await services.user.findOrCreateUserByEmail(email, picture, name, nickname);
+    const user = await services.user.findOrCreateUserByEmail(email, picture, userId, name, nickname, sub);
     const session = await services.session.createSession(user.id, config.SESSION_DURATION_MINUTES);
 
     const oneDayInMilliseconds = config.SESSION_DURATION_MINUTES * 60 * 1000;

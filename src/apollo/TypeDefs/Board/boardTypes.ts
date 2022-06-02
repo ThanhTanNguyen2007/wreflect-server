@@ -1,6 +1,6 @@
 import { BoardType, Team, PhaseType } from '@prisma/client';
 
-export type createBoardType = {
+export type createBoardArgs = {
   teamId: string;
   isPublic?: boolean;
   isLocked?: boolean;
@@ -25,7 +25,7 @@ export type createBoardType = {
   isActiveCol5?: boolean;
 };
 
-export type updateBoardType = {
+export type updateBoardArgs = {
   teamId: string;
   boardId: string;
   isPublic?: boolean;
@@ -51,7 +51,13 @@ export type updateBoardType = {
   isActiveCol5?: boolean;
 };
 
-export type deleteBoardType = {
+export type deleteBoardArgs = {
   teamId: string;
   boardId: string;
+};
+
+export type updatingMeetingNoteArgs = {
+  teamId: string;
+  boardId: string;
+  meetingNote: string;
 };

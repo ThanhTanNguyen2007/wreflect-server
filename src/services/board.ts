@@ -1,7 +1,8 @@
-import { createBoardType, deleteBoardType, updateBoardType } from '../apollo/TypeDefs/Board/boardTypes';
+import { update } from 'lodash';
+import { createBoardArgs, deleteBoardArgs, updateBoardArgs } from '../apollo/TypeDefs/Board/boardTypes';
 import prisma from '../prisma';
 import error from '../errorsManagement';
-import { checkIsMemberOwningTeam } from './essential';
+import { checkIsMemberOwningTeam, checkIsMemberOfTeam } from './essential';
 
 export const getBoards = async (teamId: string) => {
   const boards = await prisma.board.findMany({
@@ -60,7 +61,7 @@ export const getBoard = async (boardId: string, meId: string) => {
   return board;
 };
 
-export const createBoard = async (meId: string, args: createBoardType) => {
+export const createBoard = async (meId: string, args: createBoardArgs) => {
   const memberOwnedTeam = await checkIsMemberOwningTeam(args.teamId, meId);
 
   const team = await prisma.team.update({
@@ -122,7 +123,7 @@ export const createBoard = async (meId: string, args: createBoardType) => {
   return team;
 };
 
-export const updateBoard = async (meId: string, args: updateBoardType) => {
+export const updateBoard = async (meId: string, args: updateBoardArgs) => {
   await checkIsMemberOwningTeam(args.teamId, meId);
 
   const board = await prisma.board.update({
@@ -219,7 +220,7 @@ export const updateBoard = async (meId: string, args: updateBoardType) => {
   return board;
 };
 
-export const deleteBoard = async (meId: string, args: deleteBoardType) => {
+export const deleteBoard = async (meId: string, args: deleteBoardArgs) => {
   const memberOwnedTeam = await checkIsMemberOwningTeam(args.teamId, meId);
 
   if (memberOwnedTeam?.team?.boards?.length <= 1) {
@@ -242,4 +243,33 @@ export const deleteBoard = async (meId: string, args: deleteBoardType) => {
   if (!team) return error.NotFound();
 
   return team;
+};
+
+export const updateMeetingNote = async (meId: string, teamId: string, boardId: string, meetingNote: string) => {
+  await checkIsMemberOfTeam(teamId, meId);
+
+  const updatingBoard = await prisma?.board?.update({
+    where: {
+      id: boardId,
+    },
+    data: {
+      meetingNote,
+    },
+    include: {
+      columns: {
+        orderBy: {
+          position: 'asc',
+        },
+        include: {
+          opinions: {
+            include: {
+              remarks: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return updatingBoard;
 };

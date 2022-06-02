@@ -150,13 +150,11 @@ CREATE TABLE "Board" (
     "isAnonymous" BOOLEAN NOT NULL DEFAULT false,
     "votesLimit" INTEGER NOT NULL DEFAULT 25,
     "meetingNote" TEXT NOT NULL DEFAULT E'My meeting note...',
-    "currentColumnId" TEXT,
     "title" TEXT NOT NULL,
     "timerInProgress" BOOLEAN NOT NULL DEFAULT false,
     "type" "BoardType" NOT NULL DEFAULT E'PHASE',
     "currentPhase" "PhaseType" NOT NULL DEFAULT E'REFLECT',
     "endTime" TIMESTAMP(3),
-    "boardTemplateId" TEXT NOT NULL,
 
     PRIMARY KEY ("id")
 );
@@ -192,7 +190,6 @@ CREATE TABLE "Column" (
     "boardId" TEXT NOT NULL,
     "color" TEXT NOT NULL DEFAULT E'white',
     "title" TEXT NOT NULL,
-    "columnTemplateId" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "position" INTEGER NOT NULL,
 
@@ -242,7 +239,6 @@ CREATE TABLE "Member" (
     "isSuperOwner" BOOLEAN NOT NULL DEFAULT false,
     "isPendingInvitation" BOOLEAN NOT NULL DEFAULT false,
     "isGuess" BOOLEAN NOT NULL DEFAULT false,
-    "meetingNote" TEXT,
     "invitedBy" TEXT,
     "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -262,6 +258,7 @@ CREATE TABLE "User" (
     "nickname" VARCHAR(150) NOT NULL,
     "picture" VARCHAR(500) NOT NULL,
     "gender" "Gender" NOT NULL DEFAULT E'UNSPECIFIED',
+    "sub" TEXT NOT NULL,
     "workplace" VARCHAR(300),
     "address" VARCHAR(300),
     "school" VARCHAR(300),
@@ -433,7 +430,7 @@ ALTER TABLE "Member" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELET
 ALTER TABLE "Member" ADD FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BanningUser" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "BanningUser" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserOnCriteria" ADD FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

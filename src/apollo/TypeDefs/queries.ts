@@ -143,6 +143,7 @@ const typeDefs = gql`
 
     getTemplates(isGettingAll: Boolean, search: String, page: Int, size: Int): Templates
     getCriteriaList(isGettingAll: Boolean, search: String, page: Int, size: Int): CriteriaList
+    getUser(userId: ID): User
     getUsers(isGettingAll: Boolean, search: String, page: Int, size: Int): Users
     # getTeams(isGettingAll: Boolean, search: String, page: Int, size: Int): Teams
 

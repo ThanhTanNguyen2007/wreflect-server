@@ -16,6 +16,8 @@ const typeDefs = gql`
     updateOpinion(meId: ID!, teamId: ID!): Opinion
 
     subOnUpdateHealthCheck(meId: ID!, teamId: ID!): HealthCheck
+
+    subOnUpdateMeetingNote(teamId: ID!, boardId: ID!): Board
   }
 `;
 

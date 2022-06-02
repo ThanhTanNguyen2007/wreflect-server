@@ -229,7 +229,6 @@ Table Member {
   isSuperOwner Boolean [not null, default: false]
   isPendingInvitation Boolean [not null, default: false]
   isGuess Boolean [not null, default: false]
-  meetingNote String
   invitedBy String
   joinedAt DateTime [default: `now()`, not null]
   user User [not null]
@@ -258,6 +257,7 @@ Table User {
   nickname String [not null]
   picture String [not null]
   gender Gender [not null, default: 'UNSPECIFIED']
+  sub String [not null]
   workplace String
   address String
   school String

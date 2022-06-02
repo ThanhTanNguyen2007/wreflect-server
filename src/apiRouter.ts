@@ -4,7 +4,7 @@ import multer from 'multer';
 import fs from 'fs';
 
 import { auth, user } from './controllers';
-import { uploadFile } from './controllers/file';
+import { changeAvatar, uploadFile } from './controllers/file';
 
 // export const uploadImage = uploads.fields([{ name: 'image-file', maxCount: 1 }]);
 const apiRouter = (): Router => {
@@ -30,6 +30,7 @@ const apiRouter = (): Router => {
   router.post('/login', auth.login);
   router.post('/logout', auth.logout);
   router.post('/upload', upload.single('photo'), uploadFile);
+  router.post('/changeAvatar', changeAvatar);
 
   router.post('/resend_verification_email', auth.sendVerificationEmail);
 

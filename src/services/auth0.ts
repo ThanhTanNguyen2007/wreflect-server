@@ -11,6 +11,7 @@ type Auth0Tokens = {
 };
 
 type DecodedJwt = {
+  userId: string;
   email: string;
   email_verified: boolean;
   name: string;

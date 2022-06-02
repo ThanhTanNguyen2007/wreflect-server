@@ -24,6 +24,7 @@ const typeDefs = gql`
     disableUpVote: Boolean
     isAnonymous: Boolean
     votesLimit: Int
+    meetingNote: String
     title: String
     timerInProgress: Int
     endTime: String
@@ -33,6 +34,5 @@ const typeDefs = gql`
     columns(meId: ID): [Column]
   }
 `;
-
 
 export default typeDefs;

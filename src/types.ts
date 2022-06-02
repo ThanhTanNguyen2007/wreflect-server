@@ -28,21 +28,20 @@ export type customerError = {
   code: number;
 };
 
-export type createTeamType = {
+export type createTeamArgs = {
   name: string;
   startDate: string;
   endDate: string;
-  isPublish: boolean;
+  isPublic: boolean;
   description?: string;
   picture?: string;
 };
 
-export type updateTeamType = {
-  id: string;
+export type updateTeamArgs = {
+  teamId: string;
   name?: string;
   startDate?: string;
   endDate?: string;
-  status?: string;
   isPublic?: boolean;
   picture?: string;
   description?: string;

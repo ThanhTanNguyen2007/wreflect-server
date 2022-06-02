@@ -1,4 +1,4 @@
-import { getUsersArgs, banUserArgs } from './TypeDefs/userTypeDefs';
+import { getUsersArgs, banUserArgs, updateUserArgs } from './TypeDefs/userTypeDefs';
 import { getCriteriaListArgs, updateCriteriaArgs, createCriteriaArgs } from './TypeDefs/Criteria/criteriaTypeDefs';
 import _ from 'lodash';
 import {
@@ -8,7 +8,7 @@ import {
   submitDoPersonalReflection,
 } from './TypeDefs/Assessment/assessmentTypes';
 import { createRemarkType, removeRemarkType } from './TypeDefs/remarkTypeDefs';
-import { addMemberToTeamType, RequestWithUserInfo } from './../types';
+import { addMemberToTeamType, RequestWithUserInfo, updateTeamArgs } from './../types';
 import {
   member,
   team,
@@ -36,7 +36,12 @@ import {
   updateActionTrackerType,
 } from './TypeDefs/opinionTypeDefs';
 import { pubsub } from '../pubSub';
-import { updateBoardType, createBoardType, deleteBoardType } from './TypeDefs/Board/boardTypes';
+import {
+  updateBoardArgs,
+  createBoardArgs,
+  deleteBoardArgs,
+  updatingMeetingNoteArgs,
+} from './TypeDefs/Board/boardTypes';
 import {
   createTemplateHealthCheckArgs,
   updateTemplateHealthCheckArgs,
@@ -142,11 +147,11 @@ const resolvers = {
       return numOfUnSeenNoti;
     },
 
-    // getSkillsAnlytic: async (_, args, {req}: {req: RequestWithUserInfo}) => {
-    //   const {id: meId} = req?.user || {}
+    // getSkillsAnlytic: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+    //   const { id: meId } = req?.user || {};
     //   const getSkillData = await user?.getSkillsAnalytic(meId);
     //   return getSkillData;
-    // }
+    // },
 
     getTemplates: async (_, args: getTemplatesArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
@@ -158,6 +163,11 @@ const resolvers = {
       const { isGettingAll, search, page, size } = args;
       const criteriaList = await criteria?.getCriteriaList(isGettingAll, search, page, size);
       return criteriaList;
+    },
+    getUser: async (_, args: { userId?: string }, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const getUser = await user?.getUser(meId, args?.userId);
+      return getUser;
     },
     getUsers: async (_, args: getUsersArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
@@ -212,23 +222,27 @@ const resolvers = {
       return deletingCriteria;
     },
 
-    updateMeetingNote: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+    updateMeetingNote: async (_, args: updatingMeetingNoteArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
-      const updatingMember = await member.updateMeetingNote(meId, args.teamId, args.meetingNote);
-      // pubsub.publish('UPDATE_MEMBER', {
-      //   subOnUpdateMember: updatingMember,
-      // });
-      return updatingMember;
+      const updatingBoard = await board.updateMeetingNote(meId, args.teamId, args.boardId, args.meetingNote);
+      pubsub.publish('UPDATE_MEETINGNOTE', {
+        subOnUpdateMeetingNote: updatingBoard,
+        teamId: args?.teamId,
+        boardId: args?.boardId,
+      });
+      return updatingBoard;
     },
     createTeam: async (_, args, { req }: { req: RequestWithUserInfo }) => {
       const myTeam = await team.createTeam(req, args);
       return myTeam;
     },
-    updateTeam: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      return await team.updateTeam(req, args);
+    updateTeam: async (_, args: updateTeamArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      return await team.updateTeam(meId, args);
     },
     deleteTeam: async (_, args, { req }: { req: RequestWithUserInfo }) => {
-      return await team.deleteTeam(req, args?.teamId);
+      const { id: meId } = req?.user || {};
+      return await team.deleteTeam(meId, args?.teamId);
     },
 
     createHealthCheck: async (_, args: createHealthCheckArgs, { req }: { req: RequestWithUserInfo }) => {
@@ -268,7 +282,7 @@ const resolvers = {
     // usingCurrentBoard: async (_, args, {req}: {req: RequestWithUserInfo}) => {
     //   return await team.changeCurrentBoard
     // },
-    createBoard: async (_, args: createBoardType, { req }: { req: RequestWithUserInfo }) => {
+    createBoard: async (_, args: createBoardArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
       const team = await board.createBoard(meId, args);
       pubsub.publish('CREATE_BOARD', {
@@ -277,7 +291,7 @@ const resolvers = {
       });
       return team;
     },
-    updateBoard: async (_, args: updateBoardType, { req }: { req: RequestWithUserInfo }) => {
+    updateBoard: async (_, args: updateBoardArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req?.user || {};
       const myBoard = await board.updateBoard(meId, args);
       pubsub.publish('UPDATE_BOARD', {
@@ -286,7 +300,7 @@ const resolvers = {
       });
       return myBoard;
     },
-    deleteBoard: async (_, args: deleteBoardType, { req }: { req: RequestWithUserInfo }) => {
+    deleteBoard: async (_, args: deleteBoardArgs, { req }: { req: RequestWithUserInfo }) => {
       const { id: meId } = req.user || {};
       const team = await board.deleteBoard(meId, args);
       pubsub.publish('DELETE_BOARD', {
@@ -502,6 +516,12 @@ const resolvers = {
       return removingNotification;
     },
 
+    updateUser: async (_, args: updateUserArgs, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const updatingUser = await user?.updateUser(meId, args);
+      return updatingUser;
+    },
+
     banUser: async (_, args: banUserArgs, { req }: { req: RequestWithUserInfo }) => {
       const { isAdmin } = req?.user || {};
       const banningUser = await user?.banUser(isAdmin, args);
@@ -533,6 +553,14 @@ const resolvers = {
     //     },
     //   ),
     // },
+    subOnUpdateMeetingNote: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator(['UPDATE_MEETINGNOTE']),
+        (_, args) => {
+          return _?.teamId === args?.teamId && _?.boardId === args?.boardId;
+        },
+      ),
+    },
 
     subOnUpdateTeams: {
       subscribe: withFilter(

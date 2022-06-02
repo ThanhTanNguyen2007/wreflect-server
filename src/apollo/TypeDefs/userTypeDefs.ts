@@ -1,3 +1,4 @@
+import { Gender } from '@prisma/client';
 import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
@@ -23,6 +24,7 @@ const typeDefs = gql`
     talent: String
     interest: String
     members: [Member]
+    sessions: [Session]
     notifications: [Notification]
     skillValues: [UserOnCriteria]
     banningUser: [BanningUser]
@@ -42,6 +44,18 @@ export type banUserArgs = {
   isBannedForever?: boolean;
   startDate?: string;
   endDate?: string;
+};
+
+export type updateUserArgs = {
+  nickname?: string;
+  picture?: string;
+  gender?: Gender;
+  workplace?: string;
+  address?: string;
+  school?: string;
+  introduction?: string;
+  talents?: string;
+  interests?: string;
 };
 
 export default typeDefs;

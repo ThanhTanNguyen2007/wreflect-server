@@ -95,7 +95,7 @@ const typeDefs = gql`
   # }
 
   type Mutation {
-    updateMeetingNote(teamId: String!, meetingNote: String!): Member
+    updateMeetingNote(teamId: ID!, boardId: ID!, meetingNote: String!): Board
 
     createTeam(
       name: String!
@@ -107,17 +107,16 @@ const typeDefs = gql`
       picture: String
     ): Team
     updateTeam(
-      id: String!
-      name: String
-      startDate: String
-      endDate: String
-      status: String
-      isPublic: Boolean
-      picture: String
-      description: String
+      teamId: ID!
+      name: String!
+      startDate: String!
+      endDate: String!
+      isPublic: Boolean!
+      picture: String!
+      description: String!
     ): Team
+    deleteTeam(teamId: ID!): Team
 
-    deleteTeam(teamId: String!): BatchPayload
     changeTeamAccess(teamId: String!, isPublic: Boolean!): Team
 
     startSurveyHealthCheck(
@@ -141,7 +140,7 @@ const typeDefs = gql`
     # usingCurrentBoard(teamId: String!, boardId: String!): Team
 
     createBoard(
-      teamId: String!
+      teamId: ID!
       isPublic: Boolean
       isLocked: Boolean
       disableDownVote: Boolean
@@ -166,8 +165,8 @@ const typeDefs = gql`
     ): Team
 
     updateBoard(
-      teamId: String!
-      boardId: String!
+      teamId: ID!
+      boardId: ID!
       isPublic: Boolean
       isLocked: Boolean
       disableDownVote: Boolean
@@ -191,7 +190,7 @@ const typeDefs = gql`
       isActiveCol5: Boolean
     ): Board
 
-    deleteBoard(teamId: String!, boardId: String!): Team
+    deleteBoard(teamId: ID!, boardId: ID!): Team
 
     convertOpinionsInColumn(teamId: String!, boardId: String!, columnId: String!, action: ActionConvertColumn!): Column
     emptyColumn(teamId: String!, boardId: String!, columnId: String): Column
@@ -314,6 +313,18 @@ const typeDefs = gql`
     createCriteria(name: String!, description: String!): Criteria
     updateCriteria(criteriaId: String!, name: String!, description: String!): Criteria
     deleteCriteria(criteriaId: String!): Criteria
+
+    updateUser(
+      nickName: String
+      picture: String
+      gender: String
+      workplace: String
+      address: String
+      school: String
+      introduction: String
+      talents: String
+      interests: String
+    ): User
 
     banUser(
       userId: String!
