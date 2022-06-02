@@ -543,6 +543,12 @@ const resolvers = {
       const deletingCustomTemplateForTeam = await healthCheckTemplate?.deleteCustomTemplate(meId, args);
       return deletingCustomTemplateForTeam;
     },
+
+    getSkillsAnalytic: async (_, args, { req }: { req: RequestWithUserInfo }) => {
+      const { id: meId } = req?.user || {};
+      const getSkillsAnalytic = await user?.getSkillsAnalytic(meId);
+      return getSkillsAnalytic;
+    },
   },
   Subscription: {
     // supOnUpdateMember: {

@@ -315,7 +315,7 @@ const typeDefs = gql`
     deleteCriteria(criteriaId: String!): Criteria
 
     updateUser(
-      nickName: String
+      nickname: String
       picture: String
       gender: String
       workplace: String
@@ -337,6 +337,8 @@ const typeDefs = gql`
     # getAnalysisForAdmin(): analysisForAdmin
 
     joinTeamWithLink(teamId: String!): Team
+
+    getSkillsAnalytic: User
   }
 `;
 

@@ -116,6 +116,50 @@ export const createBoard = async (meId: string, args: createBoardArgs) => {
         },
       },
     },
+    include: {
+      members: {
+        orderBy: [
+          {
+            isSuperOwner: 'desc',
+          },
+          {
+            isOwner: 'desc',
+          },
+          {
+            joinedAt: 'desc',
+          },
+        ],
+        include: {
+          user: true,
+        },
+      },
+      boards: {
+        include: {
+          columns: {
+            include: {
+              opinions: {
+                include: {
+                  remarks: {
+                    include: {
+                      author: {
+                        include: {
+                          user: true,
+                        },
+                      },
+                    },
+                  },
+                  author: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!team) return error.NotFound();

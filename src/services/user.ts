@@ -7,6 +7,7 @@ import logger from '../logger';
 import { pubsub } from '../pubSub';
 import { banUserArgs } from '../apollo/TypeDefs/userTypeDefs';
 import { P } from 'pino';
+import { user } from '.';
 
 export const findOrCreateUserByEmail = async (
   email: string,
@@ -186,20 +187,27 @@ export const getSkillsAnalytic = async (meId: string) => {
     },
   });
 
-  const skillList = await prisma?.criteria?.findMany({
-    where: {
-      id: { in: [...skillsAnalytic?.map((x) => x?.criteriaId)] },
-    },
+  skillsAnalytic?.forEach(async (skill) => {
+    await prisma?.userOnCriteria?.upsert({
+      where: {
+        userId_criteriaId: {
+          userId: meId,
+          criteriaId: skill?.criteriaId,
+        },
+      },
+      update: {
+        value: skill?._avg?.point || 0,
+      },
+      create: {
+        value: skill?._avg?.point || 0,
+        userId: meId,
+        criteriaId: skill?.criteriaId,
+      },
+    });
   });
 
-  const mergedData = await Promise.all(
-    skillList?.map((x) => {
-      const skill = skillsAnalytic?.find((y) => y?.criteriaId === x?.id);
-      if (skill) return { criteria: x, _avg: skill?._avg, _count: skill?._count };
-    }),
-  );
-
-  return mergedData;
+  const getUser = await user?.getUser(meId);
+  return getUser;
 };
 
 export const banUser = async (isAdmin: boolean, args: banUserArgs) => {
@@ -250,6 +258,7 @@ export const updateUser = async (meId: string, args: updateUserArgs) => {
     include: {
       sessions: true,
       notifications: true,
+      skillValues: true,
     },
   });
 
