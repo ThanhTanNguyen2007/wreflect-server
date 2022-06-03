@@ -143,6 +143,7 @@ model Board {
   createdBy       String
   isPublic        Boolean      @default(true)
   isLocked        Boolean      @default(false)
+  currentColumnId String?
   disableDownVote Boolean      @default(false)
   disableUpVote   Boolean      @default(false)
   isAnonymous     Boolean      @default(false)
