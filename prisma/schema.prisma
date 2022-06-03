@@ -297,7 +297,7 @@ model User {
   nickname           String           @db.VarChar(150)
   picture            String           @db.VarChar(500)
   gender             Gender           @default(UNSPECIFIED)
-  sub                String
+  sub                String?
   workplace          String?          @db.VarChar(300)
   address            String?          @db.VarChar(300)
   school             String?          @db.VarChar(300)
